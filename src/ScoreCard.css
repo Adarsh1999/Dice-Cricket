@@ -1,0 +1,14 @@
+.scorecard{
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    padding: 4rem;
+}
+
+.custom{
+    font-weight: 1000;
+}
+
+/* .row{
+    background-color: red;
+} */

@@ -1,0 +1,17 @@
+h1{
+    text-align: center;
+}
+
+.score{
+    padding-left: 25px;
+    font-size: large;
+    font-weight: 700;
+} 
+.players{
+    padding-left: 400px;
+}
+
+
+.target{
+    margin-left: 35rem;
+}
