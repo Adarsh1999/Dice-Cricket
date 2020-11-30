@@ -1,9 +1,9 @@
-# cra-ts-tailwind
+# Dice-Cricket
 
 ## Usage
 
 ```
-git clone https://github.com/Akshay090/cra-ts-tailwind.git
+git clone https://github.com/Adarsh1999/Dice-Cricket.git
 ```
 
 ```
