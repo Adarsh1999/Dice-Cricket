@@ -17,9 +17,9 @@ function App(props) {
             'David Warner',
             'Steven Smith',
             'Glenn Maxwell',
-            'Tim Paine',
+            'Mattew Wade',
             'Marcus Stoinos',
-            'Alex Carey',
+            'Marnus Labuschagne',
             'Pat Cummins',
             'Mitchell Starc',
             'Kane Richardson',
@@ -193,6 +193,10 @@ function App(props) {
     useEffect(() => {
         if (innings === 2 && score > totalTeamScore) {
             console.log('Team 2 won the match ');
+            dispatch({
+                type: 'SET_RESULT',
+                result: `${state.team2} won by ${10 - wickets} wickets`,
+            });
             setMatchOver(1);
         }
     }, [score]);
@@ -218,7 +222,10 @@ function App(props) {
         console.log('current fallen wickets', wickets);
         if (innings === 2 && wickets === 10) {
             console.log('team 1 won');
-
+            dispatch({
+                type: 'SET_RESULT',
+                result: `${state.team1} won by ${totalTeamScore - score} runs`,
+            });
             setMatchOver(1);
         }
         if (Bool && score % 2 === 0) {
@@ -286,10 +293,6 @@ function App(props) {
                         ) : matchOver === 1 && score > totalTeamScore ? (
                             <h3>
                                 {state.team2} won by {10 - wickets} wickets
-                                {dispatch({
-                                    type: 'SET_RESULT',
-                                    result: `${state.team2} won by ${10 - wickets} runs`,
-                                })}
                             </h3>
                         ) : (
                             console.log('matchover')

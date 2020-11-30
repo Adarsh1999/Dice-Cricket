@@ -39,7 +39,7 @@ function CoinToss(params) {
                 // className="hover:bg-red-500 hover:-translate-y-1 hover:scale-110 border-3 p-4 mt-10 text-lg font-bold transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid"
                 disabled={times >= 1 ? true : false}
                 className={cx({
-                    'hover:bg-red-500 hover:-translate-y-1 hover:scale-110 border-3 p-4 mt-10 text-lg font-bold transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid rounded-lg shadow-md': true,
+                    'hover:bg-red-500 hover:-translate-y-1 hover:scale-110 border-3 p-4 mt-10 text-lg font-bold transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid m-4 rounded-lg shadow-md': true,
                     // 'bg-gray-500': sidebar,
                     'py-2 px-4 bg-emerald-500 text-white font-semibold rounded-lg shadow-md disabled:opacity-50':
                         times >= 1,

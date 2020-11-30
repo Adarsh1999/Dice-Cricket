@@ -7,8 +7,7 @@ import { Button } from '@material-ui/core';
 import CoinToss from './CoinToss';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 import { useStateValue } from './StateProvider';
-import Summary from './Summary';
-
+import Axios from 'axios';
 function Landing() {
     const [team1Selected, setTeam1Selected] = useState('');
     const [times, setTimes] = useState(1);
@@ -21,6 +20,11 @@ function Landing() {
             team1: team1Selected,
             team2: team2Selected,
         });
+    };
+    const getTeam = async (team1Selected, team2Selected) => {
+        const data = await Axios.get('https://official-joke-api.appspot.com/random_joke');
+        console.log(data.data);
+        return data;
     };
 
     // const [demo, setdemo] = useState("this is from parent")
@@ -48,7 +52,7 @@ function Landing() {
                     // Team_batting_next: team2Selected,
                 }}
             >
-                <Button variant="outlined" color="primary" onClick={login}>
+                <Button variant="outlined" color="primary" onClick={login} className="m-4">
                     Lets play match
                 </Button>
             </Link>
@@ -58,16 +62,9 @@ function Landing() {
                     Selected Team1 is {team1Selected} vs {team2Selected}{' '}
                 </h3>
             </div>
-
-            {/* <Link
-                to={{
-                    pathname: '/summary',
-                }}
-            >
-                <Button variant="outlined" color="primary">
-                    Lets test match
-                </Button>
-            </Link> */}
+            <button className="bg-yellow-600" onClick={getTeam(team1Selected, team2Selected)}>
+                try axios
+            </button>
         </div>
     );
 }
