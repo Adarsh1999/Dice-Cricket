@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Landing.css';
 import { BrowserRouter } from 'react-router-dom';
@@ -7,13 +7,15 @@ import { Button } from '@material-ui/core';
 import CoinToss from './CoinToss';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 import { useStateValue } from './StateProvider';
-import Axios from 'axios';
+import axios from './axios';
 function Landing() {
     const [team1Selected, setTeam1Selected] = useState('');
     const [times, setTimes] = useState(1);
     const [team2Selected, setTeam2Selected] = useState('');
 
     const [state, dispatch] = useStateValue();
+    const [playerObj, setPlayerObj] = useState();
+
     const login = () => {
         dispatch({
             type: 'SET_TEAM',
@@ -21,13 +23,8 @@ function Landing() {
             team2: team2Selected,
         });
     };
-    const getTeam = async (team1Selected, team2Selected) => {
-        const data = await Axios.get('https://official-joke-api.appspot.com/random_joke');
-        console.log(data.data);
-        return data;
-    };
 
-    // const [demo, setdemo] = useState("this is from parent")
+    
     return (
         <div className="choose_teams">
             <Teams
@@ -38,6 +35,7 @@ function Landing() {
                 times={times}
                 team2Selected={team2Selected}
             />
+
             <CoinToss
                 setTeam1Selected={setTeam1Selected}
                 setTeam2Selected={setTeam2Selected}
@@ -62,9 +60,11 @@ function Landing() {
                     Selected Team1 is {team1Selected} vs {team2Selected}{' '}
                 </h3>
             </div>
-            <button className="bg-yellow-600" onClick={getTeam(team1Selected, team2Selected)}>
-                try axios
-            </button>
+
+            {/* <button className="bg-yellow-600" onClick={getTeam}>
+                axios
+            </button> */}
+            {/* {new Date().toString()} */}
         </div>
     );
 }

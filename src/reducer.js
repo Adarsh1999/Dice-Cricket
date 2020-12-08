@@ -4,6 +4,7 @@ export const initialState = {
     team1_data: {},
     team2_data: {},
     result: null,
+    timestamp: null,
 };
 
 // Selector

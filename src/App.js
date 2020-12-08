@@ -8,85 +8,10 @@ import { Button } from '@material-ui/core';
 import { useStateValue } from './StateProvider';
 import { Link } from 'react-router-dom';
 import Summary from './Summary';
+import axios from './axios';
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-function App(props) {
-    const playerNames = {
-        Australia: [
-            'Aaron Finch',
-            'David Warner',
-            'Steven Smith',
-            'Glenn Maxwell',
-            'Mattew Wade',
-            'Marcus Stoinos',
-            'Marnus Labuschagne',
-            'Pat Cummins',
-            'Mitchell Starc',
-            'Kane Richardson',
-            'Adam Zampa',
-        ],
-        New_Zealand: [
-            'Henry Nicholls',
-            'Martin Guptill',
-            'Kane Williamson',
-            'Ross Taylor',
-            'James Neesham',
-            'Colin de Grandhomme',
-            'Tom Latham',
-            'Mitchell Santner',
-            'Trent Boult',
-            'Tim Southee',
-            'Lockie Ferguson',
-        ],
-        India: [
-            'Rohit Sharma',
-            'Shikhar Dhawan',
-            'Virat Kohli',
-            'K. L. Rahul',
-            'M.S Dhoni',
-            'Hardik Pandya',
-            'Ravindra Jadeja',
-            'Yuzvendra Chahal',
-            'Mohammed Shami',
-            'Jasprit Bumrah',
-            'Kuldeep Yadav',
-        ],
-        England: [
-            'Jonny Baristow',
-            'Jason Roy',
-            'Joe Root',
-            'Eoin Morgan',
-            'Jos Buttler',
-            'Ben Stokes',
-            'Jofra Archer',
-            'Sam Curran',
-            'Chris Woakes',
-            'Adil Rashid',
-            'Liam Plunkett',
-        ],
-    };
+function App() {
     const [state, dispatch] = useStateValue();
-    let firstTeam = [];
-    state.team1 === 'Australia'
-        ? (firstTeam = playerNames.Australia)
-        : state.team1 === 'New Zealand'
-        ? (firstTeam = playerNames.New_Zealand)
-        : state.team1 === 'England'
-        ? (firstTeam = playerNames.England)
-        : state.team1 === 'India'
-        ? (firstTeam = playerNames.India)
-        : console.log('no team');
-
-    let secondTeam = [];
-    state.team2 === 'Australia'
-        ? (secondTeam = playerNames.Australia)
-        : state.team2 === 'New Zealand'
-        ? (secondTeam = playerNames.New_Zealand)
-        : state.team2 === 'England'
-        ? (secondTeam = playerNames.England)
-        : state.team2 === 'India'
-        ? (secondTeam = playerNames.India)
-        : console.log('no team');
 
     const [score, setScore] = useState(0);
     const [wickets, setWickets] = useState(0);
@@ -99,8 +24,17 @@ function App(props) {
     const [Bool, setBool] = useState(false);
     const [striker, setStriker] = useState(0);
     const [matchOver, setMatchOver] = useState(0);
-    // let isMount = useIsMount();
+    const [playerObj, setPlayerObj] = useState();
 
+    const getTeam = async () => {
+        const { data } = await axios.get(`/teams?q=${state.team1}&p=${state.team2}`);
+        console.log(data);
+        setPlayerObj(data);
+    };
+
+    useEffect(() => {
+        getTeam();
+    }, []);
     // To refresh after 10 wickets haul
     const afterEffect = () => {
         //if logic
@@ -112,7 +46,7 @@ function App(props) {
                     current: currentPlayers,
                     status: playersOut,
                     striker: striker,
-                    firstTeam: firstTeam,
+                    firstTeam: playerObj.team1,
                     score: score,
                     wickets: 10,
                 },
@@ -184,12 +118,13 @@ function App(props) {
                 current: currentPlayers,
                 status: playersOut,
                 striker: striker,
-                secondTeam: secondTeam,
+                secondTeam: playerObj.team2,
                 score: score,
                 wickets: wickets,
             },
         });
     };
+
     useEffect(() => {
         if (innings === 2 && score > totalTeamScore) {
             console.log('Team 2 won the match ');
@@ -228,6 +163,7 @@ function App(props) {
             });
             setMatchOver(1);
         }
+        //most complex use case of usestate but very important refer for future
         if (Bool && score % 2 === 0) {
             setCurrentPlayers((prevState) => {
                 const val = prevState.map((item, idx) => (idx === 0 ? wickets + 1 : item));
@@ -272,7 +208,7 @@ function App(props) {
                         sound={'/audio.mp3'}
                         faceBg={'White'}
                         faces={dice_face}
-                        // cheatValue={5}
+                        cheatValue={5}
                         // onClick={}
                     />
                 ) : (
@@ -300,15 +236,20 @@ function App(props) {
                     </span>
                 </div>
             </div>
-            <ScoreCard
-                scorelist={players}
-                current={currentPlayers}
-                status={playersOut}
-                striker={striker}
-                firstTeam={firstTeam}
-                secondTeam={secondTeam}
-                innings={innings}
-            />
+            {playerObj ? (
+                <ScoreCard
+                    scorelist={players}
+                    current={currentPlayers}
+                    status={playersOut}
+                    striker={striker}
+                    firstTeam={playerObj.team1}
+                    secondTeam={playerObj.team2}
+                    innings={innings}
+                />
+            ) : (
+                <h1>Loading</h1>
+            )}
+
             <div className="flex justify-around">
                 <Button
                     variant="outlined"
@@ -330,24 +271,13 @@ function App(props) {
                         disabled={innings === 1 ? true : false}
                         variant="outlined"
                         color="primary"
-                        className="flex justify-center"
+                        // className="flex justify-center"
                         onClick={() => dispatchTeam2()}
                     >
                         Match Summary
                     </Button>
                 </Link>
             </div>
-
-            {/* <Button
-                disabled={innings === 1 ? true : false}
-                variant="outlined"
-                color="primary"
-                onClick={() => dispatchTeam2()}
-            >
-                Dispatch match
-            </Button> */}
-
-            {/* <Summary /> */}
         </div>
 
         // Headers
@@ -358,13 +288,6 @@ function App(props) {
 export default App;
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const useIsMount = () => {
-    const isMountRef = useRef(true);
-    useEffect(() => {
-        isMountRef.current = false;
-    }, []);
-    return isMountRef.current;
-};
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 

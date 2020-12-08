@@ -18,7 +18,7 @@ function ScoreCard({ scorelist, current, status, striker, firstTeam, secondTeam,
             
         </div> */}
 
-            <Table striped={true} bordered={true} hover={true} size={'sm'} className="w-60">
+            <Table striped={true} bordered={true} hover={true} size={'sm'} className="w-50 sm:w-full">
                 <thead className="thead-dark">
                     <tr>
                         <th scope="col" className="text-center">

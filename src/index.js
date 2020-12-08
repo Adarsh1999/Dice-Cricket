@@ -8,7 +8,8 @@ import Landing from './Landing';
 import Summary from './Summary';
 import { StateProvider } from './StateProvider';
 import reducer, { initialState } from './reducer';
-
+import MatchHistory from './MatchHistory';
+import Past from './Past';
 ReactDOM.render(
     <React.StrictMode>
         <StateProvider initialState={initialState} reducer={reducer}>
@@ -20,6 +21,8 @@ ReactDOM.render(
                     </Route>
                     <Route path="/match" component={App} />
                     <Route path="/Summary" component={Summary} />
+                    <Route path="/history/:id" component={Past} />
+                    <Route path="/history" component={MatchHistory} />
                 </Switch>
             </Router>
         </StateProvider>
