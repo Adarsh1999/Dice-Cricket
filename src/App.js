@@ -208,7 +208,7 @@ function App() {
                         sound={'/audio.mp3'}
                         faceBg={'White'}
                         faces={dice_face}
-                        cheatValue={5}
+                        // cheatValue={5}
                         // onClick={}
                     />
                 ) : (

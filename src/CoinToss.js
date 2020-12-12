@@ -3,7 +3,7 @@ import cx from 'classnames';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 import './CoinToss.css';
 function CoinToss(params) {
-    const [side, setSide] = useState(1);
+    const [side, setSide] = useState();
     const [tossed, setTossed] = useState(0);
     const [times, setTimes] = useState(0);
     const tossCoin = () => {
@@ -39,7 +39,7 @@ function CoinToss(params) {
                 // className="hover:bg-red-500 hover:-translate-y-1 hover:scale-110 border-3 p-4 mt-10 text-lg font-bold transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid"
                 disabled={times >= 1 ? true : false}
                 className={cx({
-                    'hover:bg-red-500 hover:-translate-y-1 hover:scale-110 border-3 p-4 mt-10 text-lg font-bold transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid m-4 rounded-lg shadow-md': true,
+                    'hover:bg-red-500 hover:-translate-y-1 hover:scale-110 border-3 p-4 mt-10 text-lg font-bold transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid m-4 rounded-lg shadow-md text-white': true,
                     // 'bg-gray-500': sidebar,
                     'py-2 px-4 bg-emerald-500 text-white font-semibold rounded-lg shadow-md disabled:opacity-50':
                         times >= 1,
