@@ -13,3 +13,7 @@ npm i
 ```
 npm start
 ```
+
+## Rules of the Games
+
+1.
