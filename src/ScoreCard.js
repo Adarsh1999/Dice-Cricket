@@ -5,20 +5,37 @@ import Table from 'react-bootstrap/Table';
 import './ScoreCard.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-function ScoreCard({ scorelist, current, status, striker, firstTeam, secondTeam, innings }) {
+function ScoreCard({
+    scorelist,
+    current,
+    status,
+    striker,
+    firstTeam,
+    secondTeam,
+    innings,
+    team1Score,
+    team2Score,
+    team2wic,
+ 
+}) {
     return (
         <div className="scorecard">
             {/* <div className='scorecard__header'>
 
-            
+        
             </div> */}
             {/* <div className="scorecard__list">
-
+w
             
             
         </div> */}
-
-            <Table striped={true} bordered={true} hover={true} size={'sm'} className="w-50 sm:w-full">
+            <Table
+                striped={true}
+                bordered={true}
+                hover={true}
+                size={'sm'}
+                className="w-50 sm:w-full rounded-md shadow-lg"
+            >
                 <thead className="thead-dark">
                     <tr>
                         <th scope="col" className="text-center">
@@ -51,6 +68,22 @@ function ScoreCard({ scorelist, current, status, striker, firstTeam, secondTeam,
                             <td className="text-center">{score}</td>
                         </tr>
                     ))}
+                    {team1Score && innings === 1 ? (
+                        <tr className="bg-green-300">
+                            <td></td>
+                            <th>Total Score</th>
+                            <th>{team1Score} / 10</th>
+                        </tr>
+                    ) : null}
+                    {team2Score && innings === 2 ? (
+                        <tr className="bg-green-300">
+                            <td></td>
+                            <th>Total Score</th>
+                            <th>
+                                {team2Score} / {team2wic}
+                            </th>
+                        </tr>
+                    ) : null}
                 </tbody>
             </Table>
         </div>

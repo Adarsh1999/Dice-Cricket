@@ -20,6 +20,7 @@ function Past() {
     useEffect(() => {
         getMatch();
     }, []);
+    // console.log(detail.team1_data);
     return (
         <div>
             <Header />
@@ -28,7 +29,9 @@ function Past() {
                 {detail ? (
                     <div>
                         <div className="sm:w-screen flex flex-col items-center -mb-24">
-                            <h1 className="w-50 text-xl text-red-600 bg-yellow-300">{detail.team1}</h1>
+                            <h1 className="w-50 text-xl text-red-600 bg-yellow-300 rounded-md shadow-md">
+                                {detail.team1}
+                            </h1>
                         </div>
                         <ScoreCard
                             scorelist={detail.team1_data.scorelist}
@@ -37,10 +40,47 @@ function Past() {
                             striker={detail.team1_data.striker}
                             firstTeam={detail.team1_data.firstTeam}
                             secondTeam={detail.team1_data.secondTeam}
+                            team1Score={detail.team1_data.score}
                             innings={1}
                         />
+
+                        <div className="flex flex-col items-center w-full">
+                            <div className=" flex flex-row">
+                                {' '}
+                                <div className="text-gray-50 p-1 ml-6 mr-3 font-semibold bg-gray-700 rounded-lg">
+                                    Fall of Wickets:{' '}
+                                </div>
+                                {detail.team1_data.playerFell.map((data, id) =>
+                                    id <= 5 && data !== '' ? (
+                                        <>
+                                            <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
+                                            <div className="mr-3 font-semibold">
+                                                {detail.team1_data.fallOn[id]}/{id + 1}
+                                            </div>
+                                        </>
+                                    ) : null,
+                                )}
+                            </div>
+                            <div className="flex flex-row mt-3 mb-4 ml-8">
+                                {' '}
+                                <div className="mr-3"> </div>
+                                {detail.team1_data.playerFell.map((data, id) =>
+                                    id > 5 && data !== '' ? (
+                                        <>
+                                            <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
+                                            <div className="mr-3 font-semibold">
+                                                {detail.team1_data.fallOn[id]}/{id + 1}
+                                            </div>
+                                        </>
+                                    ) : null,
+                                )}
+                            </div>
+                        </div>
+
                         <div className="sm:w-screen flex flex-col items-center -mb-24">
-                            <h1 className="w-50 text-xl text-red-600 bg-yellow-300">{detail.team2}</h1>
+                            <h1 className="w-50 text-xl text-red-600 bg-yellow-300 rounded-md shadow-md">
+                                {detail.team2}
+                            </h1>
                         </div>
                         <ScoreCard
                             scorelist={detail.team2_data.scorelist}
@@ -50,13 +90,48 @@ function Past() {
                             firstTeam={detail.team2_data.firstTeam}
                             secondTeam={detail.team2_data.secondTeam}
                             innings={2}
+                            team2Score={detail.team2_data.score}
+                            team2wic={detail.team2_data.wickets}
                         />
+                        <div className="flex flex-col items-center w-full">
+                            <div className=" flex flex-row">
+                                {' '}
+                                <div className="text-gray-50 p-1 ml-6 mr-3 font-semibold bg-gray-700 rounded-lg">
+                                    Fall of Wickets:{' '}
+                                </div>
+                                {detail.team2_data.playerFell.map((data, id) =>
+                                    id <= 5 && data !== '' ? (
+                                        <>
+                                            <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
+                                            <div className="mr-3 font-semibold">
+                                                {detail.team2_data.fallOn[id]}/{id + 1}
+                                            </div>
+                                        </>
+                                    ) : null,
+                                )}
+                            </div>
+                            <div className="flex flex-row mt-3 mb-4 ml-8">
+                                {' '}
+                                <div className="mr-3"> </div>
+                                {detail.team2_data.playerFell.map((data, id) =>
+                                    id > 5 && data !== '' ? (
+                                        <>
+                                            <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
+                                            <div className="mr-3 font-semibold">
+                                                {detail.team2_data.fallOn[id]}/{id + 1}
+                                            </div>
+                                        </>
+                                    ) : null,
+                                )}
+                            </div>
+                        </div>
+
                         <div className="flex flex-col items-center">
-                            <h2 className="p-4 text-yellow-400 bg-purple-400">{detail.result}</h2>
+                            <h2 className="p-4 text-gray-100 bg-blue-700 rounded-lg shadow-lg">{detail.result}</h2>
                         </div>
                     </div>
                 ) : (
-                    <h1 className="w-full h-full m-12 text-center">Loading</h1>
+                    <h1 className=" w-full h-full m-12 text-center">Loading</h1>
                 )}
             </div>
         </div>

@@ -8,7 +8,6 @@ import axios from './axios';
 import { Button } from '@material-ui/core';
 import { Link } from 'react-router-dom';
 
-
 function Summary() {
     const [state, dispatch] = useStateValue();
 
@@ -20,11 +19,15 @@ function Summary() {
     };
     return (
         <div className="flex flex-col items-center w-full">
-            <Header />
+            <div className="w-screen mb-6">
+                {' '}
+                <Header />
+            </div>
+            <h1 className="w-50 flex justify-center text-xl text-red-600 bg-yellow-300 rounded-md shadow-md">
+                {state.team1}
+            </h1>
 
-            <h1 className="w-50 flex justify-center text-xl text-red-600 bg-yellow-300">{state.team1}</h1>
-
-            <Table striped={true} bordered={true} hover={true} size={'sm'} className="w-50 mt-2">
+            <Table striped={true} bordered={true} hover={true} size={'sm'} className="w-50 mt-2 shadow-lg">
                 <thead className="thead-dark">
                     <tr>
                         <th scope="col">#</th>
@@ -63,9 +66,39 @@ function Summary() {
                     </tr>
                 </tbody>
             </Table>
+            <div className=" flex flex-row">
+                {' '}
+                <div className="text-gray-50 p-1 ml-6 mr-3 font-semibold bg-gray-700 rounded-lg">Fall of Wickets: </div>
+                {state.team1_data.playerFell.map((data, id) =>
+                    id <= 5 && data !== '' ? (
+                        <>
+                            <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
+                            <div className="mr-3 font-semibold">
+                                {state.team1_data.fallOn[id]}/{id + 1}
+                            </div>
+                        </>
+                    ) : null,
+                )}
+            </div>
+            <div className="flex flex-row mt-3 mb-4 ml-8">
+                {' '}
+                <div className="mr-3"> </div>
+                {state.team1_data.playerFell.map((data, id) =>
+                    id > 5 && data !== '' ? (
+                        <>
+                            <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
+                            <div className="mr-3 font-semibold">
+                                {state.team1_data.fallOn[id]}/{id + 1}
+                            </div>
+                        </>
+                    ) : null,
+                )}
+            </div>
 
-            <h1 className="w-50 flex justify-center mt-20 text-xl text-red-600 bg-yellow-300">{state.team2}</h1>
-            <Table striped={true} bordered={true} hover={true} size={'sm'} className="w-50 mt-2">
+            <h1 className="w-50 flex justify-center mt-20 text-xl text-red-600 bg-yellow-300 rounded-md shadow-md">
+                {state.team2}
+            </h1>
+            <Table striped={true} bordered={true} hover={true} size={'sm'} className="w-50 mt-2 shadow-lg">
                 <thead className="thead-dark">
                     <tr>
                         <th scope="col">#</th>
@@ -106,10 +139,38 @@ function Summary() {
                     </tr>
                 </tbody>
             </Table>
-            <h2 className="p-4 text-yellow-400 bg-purple-400">{state.result}</h2>
+            <div className=" flex flex-row">
+                {' '}
+                <div className="text-gray-50 p-1 ml-6 mr-3 font-semibold bg-gray-700 rounded-lg">Fall of Wickets: </div>
+                {state.team2_data.playerFell.map((data, id) =>
+                    id <= 5 && data !== '' ? (
+                        <>
+                            <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
+                            <div className="mr-3 font-semibold">
+                                {state.team2_data.fallOn[id]}/{id + 1}
+                            </div>
+                        </>
+                    ) : null,
+                )}
+            </div>
+            <div className="flex flex-row mt-3 mb-4 ml-8">
+                {' '}
+                <div className="mr-3"> </div>
+                {state.team2_data.playerFell.map((data, id) =>
+                    id > 5 && data !== '' ? (
+                        <>
+                            <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
+                            <div className="mr-3 font-semibold">
+                                {state.team2_data.fallOn[id]}/{id + 1}
+                            </div>
+                        </>
+                    ) : null,
+                )}
+            </div>
+            <h2 className="rounded-2xl p-3 text-gray-100 bg-blue-700 shadow-lg">{state.result}</h2>
 
-            <div className="flex justify-between">
-                <Button variant="outlined" color="primary" onClick={() => saveToDb()}>
+            <div className="flex justify-around w-full mt-4 mb-4">
+                <Button variant="contained" color="primary" onClick={() => saveToDb()}>
                     Save to DB
                 </Button>
                 <Link
@@ -118,9 +179,9 @@ function Summary() {
                     }}
                 >
                     <Button
-                        variant="outlined"
+                        variant="contained"
                         color="primary"
-                        // className="flex justify-center"
+                        // className="flex justi
                     >
                         ALL matches
                     </Button>
@@ -129,5 +190,4 @@ function Summary() {
         </div>
     );
 }
-
 export default Summary;

@@ -17,23 +17,30 @@ function CoinToss(params) {
             console.log(team1);
             params.setTeam1Selected(params.team2Selected);
             params.setTeam2Selected(team1);
+            params.setIsTossed(true);
+        } else {
+            params.setIsTossed(true);
         }
     };
 
     return (
         <div
-            // id={`coin ${() => {
-            //     side === 1 ? 'heads' : 'tails';
-            // }}`}
-            id={cx({
-                coin: true,
-                heads: side === 1,
-                tails: side !== 1,
-            })}
+        // id={`coin ${() => {
+        //     side === 1 ? 'heads' : 'tails';
+        // }}`}
+        // id={cx({
+        //     coin: true,
+        //     heads: side === 1,
+        //     tails: side !== 1,
+        // })}
         >
             {/* <div>The coin has been tossed {tossed} times.</div>
             <div>Batting is of {params.team1Selected}</div> */}
-            <div className="ml-4 text-lg font-bold">It landed on {side === 1 ? 'heads' : 'tails'}</div>
+            {params.isTossed ? (
+                <div className="m-4 -mb-2 text-lg font-bold text-pink-600 border-2 border-fuchsia-700 rounded-xl px-2">It landed on {side === 1 ? 'heads' : 'tails'}</div>
+            ) : (
+                <div> </div>
+            )}
 
             <button
                 // className="hover:bg-red-500 hover:-translate-y-1 hover:scale-110 border-3 p-4 mt-10 text-lg font-bold transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid"
