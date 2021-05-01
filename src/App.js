@@ -358,6 +358,7 @@ function App() {
                     className="hover:bg-blue-600 focus:outline-none disabled:opacity-50 px-4 py-2 font-semibold text-center text-white no-underline bg-blue-500 rounded-lg shadow-md"
                     // disabled={(wickets)=>wickets===10?false:true}
                     onClick={() => afterEffect()}
+                    disabled={innings === 2 ? true : false}
                 >
                     Next Innings
                 </button>
