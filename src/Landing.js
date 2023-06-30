@@ -36,7 +36,6 @@ function Landing() {
                 times={times}
                 team2Selected={team2Selected}
             />
-
             <CoinToss
                 setTeam1Selected={setTeam1Selected}
                 setTeam2Selected={setTeam2Selected}
@@ -45,12 +44,9 @@ function Landing() {
                 isTossed={isTossed}
                 setIsTossed={setIsTossed}
             />
-            {/* <Button >Dispatchit</Button> */}
             <Link
                 to={{
                     pathname: '/match',
-                    // Team_batting_first: team1Selected,
-                    // Team_batting_next: team2Selected,
                 }}
             >
                 <button
@@ -61,7 +57,7 @@ function Landing() {
                 </button>
             </Link>
 
-            <div className="flex justify-around w-full mt-4">
+            <div className="sm:flex-row flex flex-col justify-around w-full mt-4">
                 <div className="border-rose-600 hover:border-lime-400 px-3 text-xl font-semibold border-2 rounded-sm shadow-md">
                     Heads
                 </div>
@@ -69,21 +65,19 @@ function Landing() {
                     Tails
                 </div>
             </div>
-            <div className="flex justify-around w-full mt-2">
+            <div className="sm:flex-row flex flex-col justify-around w-full mt-2">
                 {team1Selected ? (
                     <div
-                        className={cx({
-                            ' hover:bg-yellow-600 focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-yellow-500 rounded-lg shadow-md text-center':
-                                team1Selected === 'Australia',
-                            ' hover:bg-orange-700 focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-orange-500 rounded-lg shadow-md text-center':
-                                team1Selected === 'India',
-                            'hover:bg-blue-700 focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-blue-400 rounded-lg shadow-md text-center':
-                                team1Selected === 'England',
-                            ' hover:bg-black focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-gray-700 rounded-lg shadow-md text-center':
-                                team1Selected === 'New Zealand',
-                        })}
+                        className={cx(
+                            'hover:bg-yellow-600 focus:outline-none disabled:opacity-50 px-4 py-2 font-semibold text-white rounded-lg shadow-md text-center',
+                            {
+                                'w-full sm:w-1/6 bg-yellow-500': team1Selected === 'Australia',
+                                'w-full sm:w-1/6 bg-orange-500': team1Selected === 'India',
+                                'w-full sm:w-1/6 bg-blue-700': team1Selected === 'England',
+                                'w-full sm:w-1/6 bg-black': team1Selected === 'New Zealand',
+                            },
+                        )}
                     >
-                        {/* {team1Selected !== '' ? <h1>{team1Selected}</h1> : nothing} */}
                         {team1Selected}
                     </div>
                 ) : (
@@ -91,18 +85,16 @@ function Landing() {
                 )}
                 {team2Selected ? (
                     <div
-                        className={cx({
-                            ' hover:bg-yellow-600 focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-yellow-500 rounded-lg shadow-md text-center':
-                                team2Selected === 'Australia',
-                            ' hover:bg-orange-700 focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-orange-500 rounded-lg shadow-md text-center':
-                                team2Selected === 'India',
-                            'hover:bg-blue-700 focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-blue-400 rounded-lg shadow-md text-center':
-                                team2Selected === 'England',
-                            ' hover:bg-black focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-gray-700 rounded-lg shadow-md text-center':
-                                team2Selected === 'New Zealand',
-                        })}
+                        className={cx(
+                            'hover:bg-yellow-600 focus:outline-none disabled:opacity-50 px-4 py-2 font-semibold text-white rounded-lg shadow-md text-center mt-2 sm:mt-0',
+                            {
+                                'w-full sm:w-1/6 bg-yellow-500': team2Selected === 'Australia',
+                                'w-full sm:w-1/6 bg-orange-500': team2Selected === 'India',
+                                'w-full sm:w-1/6 bg-blue-400': team2Selected === 'England',
+                                'w-full sm:w-1/6 bg-gray-700': team2Selected === 'New Zealand',
+                            },
+                        )}
                     >
-                        {/* {team1Selected !== '' ? <h1>{team1Selected}</h1> : nothing} */}
                         {team2Selected}
                     </div>
                 ) : (
@@ -117,8 +109,6 @@ function Landing() {
                 <Link
                     to={{
                         pathname: '/history',
-                        // Team_batting_first: team1Selected,
-                        // Team_batting_next: team2Selected,
                     }}
                 >
                     <button className="hover:bg-emerald-500 hover:-translate-y-1 hover:scale-110 border-3 p-3 px-2 m-4 mt-8 text-lg font-bold text-white transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid rounded-lg shadow-lg">
