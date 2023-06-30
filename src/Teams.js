@@ -5,9 +5,9 @@ function Teams(params) {
     // params.setdemo("from the child")
 
     return (
-        <div className="flex flex-row justify-around w-full mt-10">
+        <div className="sm:flex-row sm:justify-around flex flex-col w-full mt-10">
             <button
-                className="hover:bg-yellow-700 focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-yellow-500 rounded-lg shadow-md"
+                className="hover:bg-yellow-700 focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-yellow-500 rounded-lg shadow-md"
                 onClick={() => {
                     if (params.times === 1) {
                         params.setTeam1Selected('Australia');
@@ -22,7 +22,7 @@ function Teams(params) {
                 Australia
             </button>
             <button
-                className="hover:bg-blue-700 focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-blue-400 rounded-lg shadow-md"
+                className="hover:bg-blue-700 focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-blue-400 rounded-lg shadow-md"
                 // disabled={(wickets)=>wickets===10?false:true}
                 onClick={() => {
                     if (params.times === 1) {
@@ -39,7 +39,7 @@ function Teams(params) {
             </button>
 
             <button
-                className="hover:bg-orange-700 focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-orange-500 rounded-lg shadow-md"
+                className="hover:bg-orange-700 focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-orange-500 rounded-lg shadow-md"
                 // disabled={(wickets)=>wickets===10?false:true}
                 onClick={() => {
                     if (params.times === 1) {
@@ -57,7 +57,7 @@ function Teams(params) {
 
             <button
                 // disabled={(wickets)=>wickets===10?false:true}
-                className="hover:bg-black focus:outline-none disabled:opacity-50 w-1/6 px-4 py-2 font-semibold text-white bg-gray-700 rounded-lg shadow-md"
+                className="hover:bg-black focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-gray-700 rounded-lg shadow-md"
                 onClick={() => {
                     if (params.times === 1) {
                         params.setTeam1Selected('New Zealand');
@@ -71,11 +71,6 @@ function Teams(params) {
             >
                 New Zealand
             </button>
-            <br />
-
-            {/* <button className="bg-emerald-500 hover:bg-emerald-700 focus:outline-none disabled:opacity-50 px-4 py-2 font-semibold text-white rounded-lg shadow-md">
-                Austrlia
-            </button> */}
         </div>
     );
 }

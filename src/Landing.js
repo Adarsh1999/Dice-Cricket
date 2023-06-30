@@ -36,6 +36,7 @@ function Landing() {
                 times={times}
                 team2Selected={team2Selected}
             />
+
             <CoinToss
                 setTeam1Selected={setTeam1Selected}
                 setTeam2Selected={setTeam2Selected}
