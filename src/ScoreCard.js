@@ -16,19 +16,9 @@ function ScoreCard({
     team1Score,
     team2Score,
     team2wic,
- 
 }) {
     return (
         <div className="scorecard">
-            {/* <div className='scorecard__header'>
-
-        
-            </div> */}
-            {/* <div className="scorecard__list">
-w
-            
-            
-        </div> */}
             <Table
                 striped={true}
                 bordered={true}
@@ -54,10 +44,8 @@ w
                     {scorelist.map((score, id) => (
                         <tr
                             className={`table-success ${(() => {
-                                // console.log(id, current.includes(id) && 'table-warning', 'hola');
                                 return current.includes(id) && 'table-warning';
                             })()} ${(() => {
-                                // console.log(status[id] === 1 && 'table-danger', id, 'danger bro', status);
                                 return status[id] === 1 && 'table-danger';
                             })()} ${id === striker && 'custom'}`}
                         >

@@ -288,19 +288,6 @@ function App() {
                             )}
                         </span>
                     </div>
-                    {/* <div className="flex flex-col">
-                        {matchOver === 1 && totalTeamScore > score ? (
-                            <div className="ml-3 text-xl font-bold text-green-700">
-                                {state.team1} won by {totalTeamScore - score} runs
-                            </div>
-                        ) : matchOver === 1 && score > totalTeamScore ? (
-                            <div className="ml-3 text-xl font-bold text-green-700">
-                                {state.team2} won by {10 - wickets} wickets
-                            </div>
-                        ) : (
-                            console.log('matchover')
-                        )}
-                    </div> */}
                 </div>
             </div>
             {playerObj ? (
@@ -312,8 +299,6 @@ function App() {
                     firstTeam={playerObj.team1}
                     secondTeam={playerObj.team2}
                     innings={innings}
-                    // playerFell={playerFell}
-                    // fallOn={fallOn}
                 />
             ) : (
                 <h1>Loading</h1>
@@ -364,7 +349,6 @@ function App() {
                 </button>
                 {matchOver ? <div>Match over</div> : <h1></h1>}
 
-                {/* {happyPress && alert("yo bro")} */}
                 <Link
                     to={{
                         pathname: '/summary',
