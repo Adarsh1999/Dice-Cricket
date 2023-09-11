@@ -60,16 +60,16 @@ function Teams(params) {
                 className="hover:bg-black focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-gray-700 rounded-lg shadow-md"
                 onClick={() => {
                     if (params.times === 1) {
-                        params.setTeam1Selected('New Zealand');
+                        params.setTeam1Selected('New_Zealand');
                         params.setTimes(2);
                     }
                     if (params.times === 2) {
-                        params.setTeam2Selected('New Zealand');
+                        params.setTeam2Selected('New_Zealand');
                     }
                 }}
-                disabled={params.team1Selected === 'New Zealand' ? true : false}
+                disabled={params.team1Selected === 'New_Zealand' ? true : false}
             >
-                New Zealand
+                New_Zealand
             </button>
         </div>
     );

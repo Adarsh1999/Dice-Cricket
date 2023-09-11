@@ -4,6 +4,7 @@ import React from 'react';
 import Table from 'react-bootstrap/Table';
 import './ScoreCard.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'tailwindcss/tailwind.css'; // Import tailwind CSS
 
 function ScoreCard({
     scorelist,
@@ -24,7 +25,7 @@ function ScoreCard({
                 bordered={true}
                 hover={true}
                 size={'sm'}
-                className="w-50 sm:w-full rounded-md shadow-lg"
+                className="sm:w-full w-50 rounded-md shadow-lg"
             >
                 <thead className="thead-dark">
                     <tr>
