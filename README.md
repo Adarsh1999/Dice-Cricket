@@ -7,7 +7,7 @@ git clone https://github.com/Adarsh1999/Dice-Cricket.git
 ```
 
 ```
-npm install
+npm i --legacy-peer-deps
 ```
 
 ```
