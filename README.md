@@ -2,6 +2,8 @@
 
 ## Usage
 
+This project now uses [Vite](https://vitejs.dev/) for development.
+
 ```
 git clone https://github.com/Adarsh1999/Dice-Cricket.git
 ```
@@ -11,7 +13,7 @@ npm i --legacy-peer-deps
 ```
 
 ```
-npm start
+npm run dev
 ```
 
 ## Rules of the Games
