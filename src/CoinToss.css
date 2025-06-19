@@ -9,7 +9,8 @@ h1 {
 }
 #coin {
     position: relative;
-    margin: 0 auto;
+    /* add breathing space above and below the coin */
+    margin: 32px auto;
     width: 100px;
     height: 100px;
     cursor: pointer;
