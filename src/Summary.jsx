@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Table from 'react-bootstrap/Table';
 import Header from './Header';
 import axios from './axios';
-import { Button } from '@material-ui/core';
+import Button from 'react-bootstrap/Button';
 import { Link } from 'react-router-dom';
 
 function Summary() {
@@ -170,7 +170,7 @@ function Summary() {
             <h2 className="rounded-2xl p-3 text-gray-100 bg-blue-700 shadow-lg">{state.result}</h2>
 
             <div className="flex justify-around w-full mt-4 mb-4">
-                <Button variant="contained" color="primary" onClick={() => saveToDb()}>
+                <Button variant="primary" onClick={() => saveToDb()}>
                     Save to DB
                 </Button>
                 <Link

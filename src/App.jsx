@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
-import Dice from 'react-dice-roll';
+import Dice from 'modern-react-dice-roll';
 import Header from './Header';
 import ScoreCard from './ScoreCard';
 // import { Button } from '@material-ui/core';

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BrowserRouter } from 'react-router-dom';
 import Teams from './Teams';
-import { Button } from '@material-ui/core';
 import CoinToss from './CoinToss';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 import { useStateValue } from './StateProvider';
@@ -26,7 +25,7 @@ function Landing() {
     };
 
     return (
-        <div className="bg-coolGray-100 flex flex-col items-center max-w-5xl p-8 m-auto shadow-md">
+        <div className="bg-gray-100 flex flex-col items-center max-w-5xl p-8 m-auto shadow-md">
             <div className="mt-4 text-3xl font-semibold text-blue-500">Select both teams to play with..</div>
             <Teams
                 setTeam1Selected={setTeam1Selected}
