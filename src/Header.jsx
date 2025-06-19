@@ -3,12 +3,11 @@ import React from 'react';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 function Header() {
     return (
-        <div className="flex justify-center font-sans">
-            <div className=" w-full p-3 bg-blue-500 shadow-md">
-                <a href="/" className="hover:no-underline text-white">
-                    <h1> The Dice Cricket </h1>
-                </a>
+        <div className="navbar bg-primary text-primary-content shadow">
+            <div className="flex-1 px-2 mx-2 font-bold text-xl">
+                <a href="/" className="hover:no-underline">The Dice Cricket</a>
             </div>
+            {/* future theme toggle */}
         </div>
     );
 }

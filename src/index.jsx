@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './assets/css/main.css';
+import './assets/css/tailwind.css';
 import App from './App';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Header from './Header';

@@ -7,7 +7,7 @@ function Teams(params) {
     return (
         <div className="sm:flex-row sm:justify-around flex flex-col w-full mt-10">
             <button
-                className="hover:bg-yellow-700 focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-yellow-500 rounded-lg shadow-md"
+                className="btn btn-secondary w-full sm:w-1/5 mb-2 sm:mb-0 sm:mr-2"
                 onClick={() => {
                     if (params.times === 1) {
                         params.setTeam1Selected('Australia');
@@ -22,7 +22,7 @@ function Teams(params) {
                 Australia
             </button>
             <button
-                className="hover:bg-blue-700 focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-blue-400 rounded-lg shadow-md"
+                className="btn btn-primary w-full sm:w-1/5 mb-2 sm:mb-0 sm:mr-2"
                 // disabled={(wickets)=>wickets===10?false:true}
                 onClick={() => {
                     if (params.times === 1) {
@@ -39,7 +39,7 @@ function Teams(params) {
             </button>
 
             <button
-                className="hover:bg-orange-700 focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-orange-500 rounded-lg shadow-md"
+                className="btn btn-accent w-full sm:w-1/5 mb-2 sm:mb-0 sm:mr-2"
                 // disabled={(wickets)=>wickets===10?false:true}
                 onClick={() => {
                     if (params.times === 1) {
@@ -57,7 +57,7 @@ function Teams(params) {
 
             <button
                 // disabled={(wickets)=>wickets===10?false:true}
-                className="hover:bg-black focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-gray-700 rounded-lg shadow-md"
+                className="btn btn-neutral w-full sm:w-1/5 mb-2 sm:mb-0"
                 onClick={() => {
                     if (params.times === 1) {
                         params.setTeam1Selected('New_Zealand');

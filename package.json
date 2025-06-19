@@ -1,6 +1,6 @@
 {
     "name": "cricket-scoreboard",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "private": true,
     "dependencies": {
 
@@ -66,6 +66,8 @@
         "postcss": "^8.4.31",
 
         "tailwindcss": "^3.4.1",
+        "@tailwindcss/typography": "^0.5.10",
+        "daisyui": "^4.10.0",
         "typescript": "^5.4.2",
         "vite": "^5.2.0"
     }

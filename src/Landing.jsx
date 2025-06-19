@@ -25,7 +25,7 @@ function Landing() {
     };
 
     return (
-        <div className="bg-gray-100 flex flex-col items-center max-w-5xl p-8 m-auto shadow-md">
+        <div className="card bg-base-100 shadow-xl p-8 max-w-5xl mx-auto flex flex-col items-center">
             <div className="mt-4 text-3xl font-semibold text-blue-500">Select both teams to play with..</div>
             <Teams
                 setTeam1Selected={setTeam1Selected}
@@ -51,17 +51,17 @@ function Landing() {
             >
                 <button
                     onClick={login}
-                    className="hover:bg-emerald-500 hover:-translate-y-1 hover:scale-110 border-3 p-4 m-4 mt-10 text-lg font-bold text-white transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid rounded-lg shadow-lg"
+                    className="btn btn-primary mt-10"
                 >
                     Lets play match
                 </button>
             </Link>
 
             <div className="sm:flex-row flex flex-col justify-around w-full mt-4">
-                <div className="border-rose-600 hover:border-lime-400 px-3 text-xl font-semibold border-2 rounded-sm shadow-md">
+                <div className="badge badge-outline text-lg font-semibold px-4 py-2">
                     Heads
                 </div>
-                <div className="border-rose-600 hover:border-lime-400 px-3 text-xl font-semibold border-2 rounded-sm shadow-md">
+                <div className="badge badge-outline text-lg font-semibold px-4 py-2">
                     Tails
                 </div>
             </div>
@@ -111,7 +111,7 @@ function Landing() {
                         pathname: '/history',
                     }}
                 >
-                    <button className="hover:bg-emerald-500 hover:-translate-y-1 hover:scale-110 border-3 p-3 px-2 m-4 mt-8 text-lg font-bold text-white transition duration-500 ease-in-out transform bg-blue-500 border-blue-900 border-solid rounded-lg shadow-lg">
+                    <button className="btn btn-info mt-8">
                         History
                     </button>
                 </Link>
