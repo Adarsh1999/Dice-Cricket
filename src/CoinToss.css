@@ -1,14 +1,16 @@
 body {
     /* padding-top: 50px; */
     background: #f7f7f7;
-    -webkit-perspective: 800px;
+    perspective: 800px;
+    -webkit-perspective: 800px; /* fallback */
 }
 h1 {
     text-align: center;
 }
 #coin {
     position: relative;
-    margin: 0 auto;
+    /* add breathing space above and below the coin */
+    margin: 32px auto;
     width: 100px;
     height: 100px;
     cursor: pointer;
@@ -26,16 +28,31 @@ h1 {
 .side-a {
     background-color: #bb0000;
 }
+
 .side-b {
     background-color: #3e3e3e;
 }
 
+/* Center text inside the coin */
+.side-a,
+.side-b {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+}
+
 #coin {
-    transition: -webkit-transform 1s ease-in;
+    transition: transform 1s ease-in;
     -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
 }
 #coin div {
     position: absolute;
+    backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
 }
 .side-a {
@@ -56,6 +73,24 @@ h1 {
     -moz-animation: flipTails 3s ease-out forwards;
     -o-animation: flipTails 3s ease-out forwards;
     animation: flipTails 3s ease-out forwards;
+}
+
+@keyframes flipHeads {
+    from {
+        transform: rotateY(0);
+    }
+    to {
+        transform: rotateY(1800deg);
+    }
+}
+
+@keyframes flipTails {
+    from {
+        transform: rotateY(0);
+    }
+    to {
+        transform: rotateY(1980deg);
+    }
 }
 
 @-webkit-keyframes flipHeads {

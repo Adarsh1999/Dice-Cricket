@@ -46,7 +46,7 @@ function MatchHistory() {
                             }}
                         >
                             <div className="flex flex-col items-center">
-                                <div className="bg-lightBlue-300 w-3/4 m-4 font-semibold text-center shadow-md">
+                                <div className="bg-sky-300 w-3/4 m-4 font-semibold text-center shadow-md">
                                     {score.team1} vs {score.team2}
                                     <br></br>
                                     {score.result}
