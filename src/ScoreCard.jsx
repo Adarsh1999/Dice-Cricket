@@ -43,7 +43,7 @@ function ScoreCard({
 
                 <tbody>
                     {scorelist.map((score, id) => (
-                        <tr
+                        <tr key={id}
                             className={`table-success ${(() => {
                                 return current.includes(id) && 'table-warning';
                             })()} ${(() => {
@@ -53,7 +53,7 @@ function ScoreCard({
                             <th scope="row" className="text-center">
                                 {id + 1}
                             </th>
-                            <td className=" text-center">{innings === 1 ? firstTeam[id] : secondTeam[id]}</td>
+                            <td className=" text-center">{innings === 1 ? (firstTeam?.[id] ?? '') : (secondTeam?.[id] ?? '')}</td>
                             <td className="text-center">{score}</td>
                         </tr>
                     ))}

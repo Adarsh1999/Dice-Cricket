@@ -31,12 +31,19 @@ function App() {
     const getTeam = async () => {
         const { data } = await axios.get(`/teams?q=${state.team1}&p=${state.team2}`);
         console.log(data);
-        setPlayerObj(data);
+        // API returns { success: true, data: { team1: { name, players }, team2: { name, players } } }
+        const { team1, team2 } = data.data || {};
+        setPlayerObj({
+            team1: team1?.players ?? [],
+            team2: team2?.players ?? [],
+        });
     };
 
     useEffect(() => {
-        getTeam();
-    }, []);
+        if (state.team1 && state.team2) {
+            getTeam();
+        }
+    }, [state.team1, state.team2]);
     // To refresh after 10 wickets haul
     const afterEffect = () => {
         //if logic

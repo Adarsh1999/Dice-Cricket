@@ -6,20 +6,56 @@ import axios from './axios';
 import Header from './Header';
 
 function Past() {
-    const [detail, setDetail] = useState();
+    const [detail, setDetail] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const { id } = useParams();
+    
     const getMatch = async () => {
-        const to_send = {
-            id: `${id}`,
-        };
-        const { data } = await axios.post('/history/find', to_send);
-        console.log(data[0]);
-        setDetail(data[0]);
+        try {
+            setLoading(true);
+            const to_send = {
+                id: `${id}`,
+            };
+            const { data } = await axios.post('/history/find', to_send);
+            console.log('API Response:', data);
+            
+            if (data.success) {
+                console.log('Game data:', data.data);
+                setDetail(data.data); // Changed from data[0] to data.data
+            } else {
+                setError('Failed to fetch match details');
+            }
+        } catch (err) {
+            console.error('Failed to fetch match details', err);
+            setError('An error occurred while fetching match details');
+        } finally {
+            setLoading(false);
+        }
     };
+    
     useEffect(() => {
         getMatch();
-    }, []);
-    // console.log(detail.team1_data);
+    }, [id]); // Added id as dependency
+    
+    if (loading) {
+        return (
+            <div>
+                <Header />
+                <h2 className="mt-4 mb-6 text-center">Loading...</h2>
+            </div>
+        );
+    }
+    
+    if (error) {
+        return (
+            <div>
+                <Header />
+                <h2 className="mt-4 mb-6 text-center text-red-500">{error}</h2>
+            </div>
+        );
+    }
+    
     return (
         <div>
             <Header />
@@ -51,12 +87,12 @@ function Past() {
                                 </div>
                                 {detail.team1_data.playerFell.map((data, id) =>
                                     id <= 5 && data !== '' ? (
-                                        <>
+                                        <React.Fragment key={id}>
                                             <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
                                             <div className="mr-3 font-semibold">
                                                 {detail.team1_data.fallOn[id]}/{id + 1}
                                             </div>
-                                        </>
+                                        </React.Fragment>
                                     ) : null,
                                 )}
                             </div>
@@ -65,12 +101,12 @@ function Past() {
                                 <div className="mr-3"> </div>
                                 {detail.team1_data.playerFell.map((data, id) =>
                                     id > 5 && data !== '' ? (
-                                        <>
+                                        <React.Fragment key={id}>
                                             <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
                                             <div className="mr-3 font-semibold">
                                                 {detail.team1_data.fallOn[id]}/{id + 1}
                                             </div>
-                                        </>
+                                        </React.Fragment>
                                     ) : null,
                                 )}
                             </div>
@@ -100,12 +136,12 @@ function Past() {
                                 </div>
                                 {detail.team2_data.playerFell.map((data, id) =>
                                     id <= 5 && data !== '' ? (
-                                        <>
+                                        <React.Fragment key={id}>
                                             <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
                                             <div className="mr-3 font-semibold">
                                                 {detail.team2_data.fallOn[id]}/{id + 1}
                                             </div>
-                                        </>
+                                        </React.Fragment>
                                     ) : null,
                                 )}
                             </div>
@@ -114,12 +150,12 @@ function Past() {
                                 <div className="mr-3"> </div>
                                 {detail.team2_data.playerFell.map((data, id) =>
                                     id > 5 && data !== '' ? (
-                                        <>
+                                        <React.Fragment key={id}>
                                             <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
                                             <div className="mr-3 font-semibold">
                                                 {detail.team2_data.fallOn[id]}/{id + 1}
                                             </div>
-                                        </>
+                                        </React.Fragment>
                                     ) : null,
                                 )}
                             </div>
@@ -130,7 +166,7 @@ function Past() {
                         </div>
                     </div>
                 ) : (
-                    <h1 className=" w-full h-full m-12 text-center">Loading</h1>
+                    <h1 className=" w-full h-full m-12 text-center">No match details found</h1>
                 )}
             </div>
         </div>
