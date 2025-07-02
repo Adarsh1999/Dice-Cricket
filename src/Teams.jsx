@@ -71,6 +71,21 @@ function Teams(params) {
             >
                 New_Zealand
             </button>
+            <button
+                className="hover:bg-green-700 focus:outline-none disabled:opacity-50 sm:w-1/6 sm:mb-0 sm:mr-2 w-full px-4 py-2 mb-2 font-semibold text-white bg-green-600 rounded-lg shadow-md"
+                onClick={() => {
+                    if (params.times === 1) {
+                        params.setTeam1Selected('South_Africa');
+                        params.setTimes(2);
+                    }
+                    if (params.times === 2) {
+                        params.setTeam2Selected('South_Africa');
+                    }
+                }}
+                disabled={params.team1Selected === 'South_Africa' ? true : false}
+            >
+                South_Africa
+            </button>
         </div>
     );
 }

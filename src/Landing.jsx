@@ -75,6 +75,7 @@ function Landing() {
                                 'w-full sm:w-1/6 bg-orange-500': team1Selected === 'India',
                                 'w-full sm:w-1/6 bg-blue-700': team1Selected === 'England',
                                 'w-full sm:w-1/6 bg-black': team1Selected === 'New_Zealand',
+                                'w-full sm:w-1/6 bg-green-600': team1Selected === 'South_Africa',
                             },
                         )}
                     >
@@ -92,6 +93,7 @@ function Landing() {
                                 'w-full sm:w-1/6 bg-orange-500': team2Selected === 'India',
                                 'w-full sm:w-1/6 bg-blue-400': team2Selected === 'England',
                                 'w-full sm:w-1/6 bg-gray-700': team2Selected === 'New_Zealand',
+                                'w-full sm:w-1/6 bg-green-600': team2Selected === 'South_Africa',
                             },
                         )}
                     >
