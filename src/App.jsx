@@ -27,6 +27,10 @@ function App() {
     const [playerObj, setPlayerObj] = useState();
     const [fallOn, setFallOn] = useState(Array(10).fill(''));
     const [playerFell, setPlayerFell] = useState(Array(10).fill(''));
+    
+    // Simple debounce mechanism
+    const [isProcessing, setIsProcessing] = useState(false);
+    const processingTimeoutRef = useRef(null);
 
     const getTeam = async () => {
         const { data } = await axios.get(`/teams?q=${state.team1}&p=${state.team2}`);
@@ -82,11 +86,27 @@ function App() {
 
     // const audio = new Audio("/audio.mp3");
 
-    // here scoring increment is done
+    // here scoring increment is done - ORIGINAL LOGIC RESTORED
     const scoring = (value) => {
-        // (value===5)?setWickets(wickets+1):setScore(prevState => prevState + value);
+        // Simple debounce - prevent multiple rapid calls
+        if (isProcessing) {
+            return;
+        }
+        
+        setIsProcessing(true);
+        
+        // Clear existing timeout
+        if (processingTimeoutRef.current) {
+            clearTimeout(processingTimeoutRef.current);
+        }
+        
+        // Re-enable after short delay
+        processingTimeoutRef.current = setTimeout(() => {
+            setIsProcessing(false);
+        }, 150); // Reduced to 150ms for better UX
+
+        // ORIGINAL SCORING LOGIC RESTORED
         setBool(true);
-        // console.log(playerObj.team1);
         if (value === 5) {
             setWickets((wickets) => wickets + 1);
             console.log(wickets);
@@ -123,6 +143,7 @@ function App() {
             }
         }
     };
+
     const dispatchTeam2 = () => {
         dispatch({
             type: 'SET_TEAM2',
@@ -160,11 +181,6 @@ function App() {
             setStriker(currentPlayers[1]);
         }
     }, [score]);
-
-    // useEffect(() => {
-    //     console.log('players', players);
-    //     console.log('currentplayers', currentPlayers);
-    // }, [players, currentPlayers]);
 
     // this useeffect is for the fallen wickets and as well as for changing playersout status and also declaring the winner
     useEffect(() => {
@@ -247,6 +263,15 @@ function App() {
         }
     }, [wickets]);
 
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (processingTimeoutRef.current) {
+                clearTimeout(processingTimeoutRef.current);
+            }
+        };
+    }, []);
+
     return (
         <div className="App">
             <Header />
@@ -305,6 +330,7 @@ function App() {
                     striker={striker}
                     firstTeam={playerObj.team1}
                     secondTeam={playerObj.team2}
+                    players={innings === 1 ? playerObj.team1 : playerObj.team2}
                     innings={innings}
                 />
             ) : (
@@ -320,12 +346,12 @@ function App() {
                     </div>
                     {playerFell.map((data, id) =>
                         id <= 5 && data !== '' ? (
-                            <>
+                            <React.Fragment key={id}>
                                 <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
                                 <div className="mr-3 font-semibold">
                                     {fallOn[id]}/{id + 1}
                                 </div>
-                            </>
+                            </React.Fragment>
                         ) : null,
                     )}
                 </div>
@@ -334,12 +360,12 @@ function App() {
                     <div className="mr-3"> </div>
                     {playerFell.map((data, id) =>
                         id > 5 && data !== '' ? (
-                            <>
+                            <React.Fragment key={id}>
                                 <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
                                 <div className="mr-3 font-semibold">
                                     {fallOn[id]}/{id + 1}
                                 </div>
-                            </>
+                            </React.Fragment>
                         ) : null,
                     )}
                 </div>

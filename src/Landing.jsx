@@ -25,8 +25,8 @@ function Landing() {
     };
 
     return (
-        <div className="bg-gray-100 flex flex-col items-center max-w-5xl p-8 m-auto shadow-md">
-            <div className="mt-4 text-3xl font-semibold text-blue-500">Select both teams to play with..</div>
+        <div className="bg-gray-100 dark:bg-gray-800 flex flex-col items-center max-w-5xl p-8 m-auto shadow-md">
+            <div className="mt-4 text-3xl font-semibold text-blue-500 dark:text-blue-400">Select both teams to play with..</div>
             <Teams
                 setTeam1Selected={setTeam1Selected}
                 setTeam2Selected={setTeam2Selected}
@@ -58,10 +58,10 @@ function Landing() {
             </Link>
 
             <div className="sm:flex-row flex flex-col justify-around w-full mt-4">
-                <div className="border-rose-600 hover:border-lime-400 px-3 text-xl font-semibold border-2 rounded-sm shadow-md">
+                <div className="border-rose-600 hover:border-lime-400 px-3 text-xl font-semibold border-2 rounded-sm shadow-md text-rose-600 dark:text-gray-100">
                     Heads
                 </div>
-                <div className="border-rose-600 hover:border-lime-400 px-3 text-xl font-semibold border-2 rounded-sm shadow-md">
+                <div className="border-rose-600 hover:border-lime-400 px-3 text-xl font-semibold border-2 rounded-sm shadow-md text-rose-600 dark:text-gray-100">
                     Tails
                 </div>
             </div>
@@ -103,7 +103,7 @@ function Landing() {
                     <h1></h1>
                 )}
             </div>
-            <div className="mt-4 text-xl font-semibold text-blue-500">
+            <div className="mt-4 text-xl font-semibold text-blue-500 dark:text-blue-400">
                 {isTossed ? <div>{team1Selected} won the toss and choosed to bat</div> : <h1></h1>}
             </div>
 

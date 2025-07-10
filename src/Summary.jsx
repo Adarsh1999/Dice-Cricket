@@ -25,16 +25,21 @@ function Summary() {
                 ...state,
                 team1_data: {
                     ...state.team1_data,
-                    // Map firstTeam to players if needed
-                    players: state.team1_data.players || state.team1_data.firstTeam || []
+                    // Ensure all player name formats are available
+                    players: state.team1_data.firstTeam || state.team1_data.players || [],
+                    firstTeam: state.team1_data.firstTeam || state.team1_data.players || [],
+                    secondTeam: state.team1_data.secondTeam || []
                 },
                 team2_data: {
                     ...state.team2_data,
-                    // Map secondTeam to players if needed  
-                    players: state.team2_data.players || state.team2_data.secondTeam || []
+                    // Ensure all player name formats are available
+                    players: state.team2_data.secondTeam || state.team2_data.players || [],
+                    firstTeam: state.team2_data.firstTeam || [],
+                    secondTeam: state.team2_data.secondTeam || state.team2_data.players || []
                 }
             };
 
+            console.log('Saving game data:', gameData);
             const { data } = await axios.post('/history/new', gameData);
             console.log('Save response:', data);
             

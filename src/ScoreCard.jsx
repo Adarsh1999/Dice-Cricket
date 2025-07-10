@@ -17,7 +17,39 @@ function ScoreCard({
     team1Score,
     team2Score,
     team2wic,
+    players, // Add players prop as fallback
 }) {
+    // Helper function to get player name with multiple fallbacks
+    const getPlayerName = (id) => {
+        let playerName = '';
+        
+        if (innings === 1) {
+            // For team 1, try multiple sources
+            playerName = firstTeam?.[id] || players?.[id] || '';
+        } else {
+            // For team 2, try multiple sources  
+            playerName = secondTeam?.[id] || players?.[id] || '';
+        }
+        
+        // If still empty, provide a fallback
+        if (!playerName || playerName === '') {
+            playerName = `Player ${id + 1}`;
+        }
+        
+        return playerName;
+    };
+
+    // Debug logging for the first render
+    React.useEffect(() => {
+        console.log('ScoreCard props:', {
+            innings,
+            firstTeam,
+            secondTeam,
+            players,
+            scorelist: scorelist?.length
+        });
+    }, [innings, firstTeam, secondTeam, players, scorelist]);
+
     return (
         <div className="scorecard">
             <Table
@@ -42,18 +74,18 @@ function ScoreCard({
                 </thead>
 
                 <tbody>
-                    {scorelist.map((score, id) => (
+                    {scorelist && scorelist.map((score, id) => (
                         <tr key={id}
                             className={`table-success ${(() => {
-                                return current.includes(id) && 'table-warning';
+                                return current && current.includes(id) && 'table-warning';
                             })()} ${(() => {
-                                return status[id] === 1 && 'table-danger';
+                                return status && status[id] === 1 && 'table-danger';
                             })()} ${id === striker && 'custom'}`}
                         >
                             <th scope="row" className="text-center">
                                 {id + 1}
                             </th>
-                            <td className=" text-center">{innings === 1 ? (firstTeam?.[id] ?? '') : (secondTeam?.[id] ?? '')}</td>
+                            <td className=" text-center">{getPlayerName(id)}</td>
                             <td className="text-center">{score}</td>
                         </tr>
                     ))}
