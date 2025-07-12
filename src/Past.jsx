@@ -82,6 +82,10 @@ function Past() {
                             <h1 className="w-50 text-xl text-red-600 bg-yellow-300 rounded-md shadow-md">
                                 {detail.team1}
                             </h1>
+                            <div className="text-sm mt-2 font-semibold text-gray-600">
+                                Score: {detail.team1_data.score}/{detail.team1_data.wickets} | 
+                                Overs: {detail.team1_data.currentOver || 0}.{detail.team1_data.ballInOver || 0}
+                            </div>
                         </div>
                         <ScoreCard
                             scorelist={detail.team1_data.scorelist}
@@ -132,6 +136,10 @@ function Past() {
                             <h1 className="w-50 text-xl text-red-600 bg-yellow-300 rounded-md shadow-md">
                                 {detail.team2}
                             </h1>
+                            <div className="text-sm mt-2 font-semibold text-gray-600">
+                                Score: {detail.team2_data.score}/{detail.team2_data.wickets} | 
+                                Overs: {detail.team2_data.currentOver || 0}.{detail.team2_data.ballInOver || 0}
+                            </div>
                         </div>
                         <ScoreCard
                             scorelist={detail.team2_data.scorelist}

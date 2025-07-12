@@ -63,10 +63,17 @@ function MatchHistory() {
                             to={`/history/${score._id}`}
                         >
                             <div className="flex flex-col items-center">
-                                <div className="bg-sky-300 w-3/4 m-4 font-semibold text-center shadow-md">
-                                    {score.team1} vs {score.team2}
-                                    <br />
-                                    {score.result}
+                                <div className="bg-sky-300 w-3/4 m-4 font-semibold text-center shadow-md p-3 rounded-lg">
+                                    <div className="text-lg font-bold">{score.team1} vs {score.team2}</div>
+                                    <div className="text-sm mt-1">
+                                        {score.team1}: {score.team1_data?.score || 0}/{score.team1_data?.wickets || 0} 
+                                        ({score.team1_data?.currentOver || 0}.{score.team1_data?.ballInOver || 0} overs)
+                                    </div>
+                                    <div className="text-sm">
+                                        {score.team2}: {score.team2_data?.score || 0}/{score.team2_data?.wickets || 0} 
+                                        ({score.team2_data?.currentOver || 0}.{score.team2_data?.ballInOver || 0} overs)
+                                    </div>
+                                    <div className="text-green-700 font-bold mt-2">{score.result}</div>
                                 </div>
                             </div>
                         </Link>
