@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import Dice from 'modern-react-dice-roll';
 import Header from './Header';
@@ -27,6 +27,25 @@ function App() {
     const [playerObj, setPlayerObj] = useState();
     const [fallOn, setFallOn] = useState(Array(10).fill(''));
     const [playerFell, setPlayerFell] = useState(Array(10).fill(''));
+    
+    // Over tracking state
+    const [currentOver, setCurrentOver] = useState(0);
+    const [ballInOver, setBallInOver] = useState(0);
+    
+    // Stronger input blocking mechanism
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const updateTimeoutRef = useRef(null);
+    const pendingUpdateRef = useRef(false);
+    const processingRef = useRef(false);
+    
+    // Use refs to track current state values to avoid stale closures
+    const currentPlayersRef = useRef(currentPlayers);
+    
+    // Update ref when state changes
+    useEffect(() => {
+        currentPlayersRef.current = currentPlayers;
+    }, [currentPlayers]);
 
     const getTeam = async () => {
         const { data } = await axios.get(`/teams?q=${state.team1}&p=${state.team2}`);
@@ -44,6 +63,7 @@ function App() {
             getTeam();
         }
     }, [state.team1, state.team2]);
+
     // To refresh after 10 wickets haul
     const afterEffect = () => {
         //if logic
@@ -74,55 +94,86 @@ function App() {
             setBool(false);
             setCurrentPlayers([0, 1]);
             setStriker(0);
+            
+            // Reset over tracking for new innings
+            setCurrentOver(0);
+            setBallInOver(0);
         };
         wickets === 10 ? setStuff() : console.log('useeffect for 10 wickets');
     };
 
     const dice_face = ['/1.png', '/2.png', '/3.png', '/4.png', '/5.png', '/6.png'];
 
-    // const audio = new Audio("/audio.mp3");
-
-    // here scoring increment is done
-    const scoring = (value) => {
-        // (value===5)?setWickets(wickets+1):setScore(prevState => prevState + value);
-        setBool(true);
-        // console.log(playerObj.team1);
-        if (value === 5) {
-            setWickets((wickets) => wickets + 1);
-            console.log(wickets);
-        } else {
-            setScore((prevState) => prevState + value);
-            if (score % 2 === 0) {
-                // player1 on strike
-                setStriker(currentPlayers[0]);
-                console.log('its even');
-
-                const index = currentPlayers[0];
-                const finalScore = players[index] + value;
-                setPlayers((prevState) => {
-                    const val = prevState.map((item, idx) => (idx === index ? finalScore : item));
-                    return val;
-                });
-
-                console.log(players);
-            } else {
-                console.log('its odd');
-                setStriker(currentPlayers[1]);
-
-                const index = currentPlayers[1];
-                const finalScore = players[index] + value;
-                setPlayers((prevState) => {
-                    // console.log(prevState, "xx1", index)
-                    const val = prevState.map((item, idx) => (idx === index ? finalScore : item));
-                    // console.log(val, 'val');
-
-                    return val;
-                });
-
-                console.log(players);
-            }
+    // Robust scoring function with complete input blocking
+    const scoring = useCallback((value) => {
+        console.log(`=== SCORING CALLED with value: ${value} ===`);
+        
+        // Prevent any double execution
+        if (processingRef.current || isProcessing) {
+            console.log('BLOCKED: Already processing a score update');
+            return;
         }
-    };
+        
+        // Set processing flag immediately
+        processingRef.current = true;
+        setIsProcessing(true);
+        console.log('Processing flag set to true');
+        
+        // Process the score update
+        if (value === 5) {
+            // Wicket case - wickets don't count as balls in the over
+            console.log('Processing wicket...');
+            setWickets((prevWickets) => prevWickets + 1);
+            setBool(true);
+        } else {
+            // Scoring case - this counts as a ball in the over
+            console.log(`Processing ${value} runs...`);
+            
+            // First, get the current score to determine which player should score
+            const currentScore = score; // Use current score state
+            const isEven = currentScore % 2 === 0;
+            const activeBatterIndex = isEven ? 0 : 1;
+            const playerIndex = currentPlayersRef.current[activeBatterIndex];
+            
+            console.log(`Current score: ${currentScore}, Player ${playerIndex + 1} will score ${value} runs`);
+            
+            // Update all states independently
+            // 1. Update team score
+            setScore((prevScore) => prevScore + value);
+            
+            // 2. Update player's individual score
+            setPlayers((prevPlayers) => {
+                const newPlayers = [...prevPlayers];
+                newPlayers[playerIndex] += value;
+                console.log(`Player ${playerIndex + 1} score updated: ${prevPlayers[playerIndex]} -> ${newPlayers[playerIndex]}`);
+                return newPlayers;
+            });
+            
+            // 3. Update over tracking
+            setBallInOver((prevBall) => {
+                const newBall = prevBall + 1;
+                if (newBall === 6) {
+                    setCurrentOver((prevOver) => prevOver + 1);
+                    return 0;
+                }
+                return newBall;
+            });
+            
+            // 4. Update striker for next ball
+            const newScore = currentScore + value;
+            const nextStriker = newScore % 2 === 0 ? currentPlayersRef.current[0] : currentPlayersRef.current[1];
+            setStriker(nextStriker);
+        }
+        
+        // Reset processing flag after a short delay
+        setTimeout(() => {
+            processingRef.current = false;
+            setIsProcessing(false);
+            console.log('Processing flag reset to false');
+        }, 150); // Reduced from 500ms to 100ms
+        
+    }, [score, isProcessing]); // Add isProcessing as dependency
+
     const dispatchTeam2 = () => {
         dispatch({
             type: 'SET_TEAM2',
@@ -160,11 +211,6 @@ function App() {
             setStriker(currentPlayers[1]);
         }
     }, [score]);
-
-    // useEffect(() => {
-    //     console.log('players', players);
-    //     console.log('currentplayers', currentPlayers);
-    // }, [players, currentPlayers]);
 
     // this useeffect is for the fallen wickets and as well as for changing playersout status and also declaring the winner
     useEffect(() => {
@@ -247,6 +293,15 @@ function App() {
         }
     }, [wickets]);
 
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (updateTimeoutRef.current) {
+                clearTimeout(updateTimeoutRef.current);
+            }
+        };
+    }, []);
+
     return (
         <div className="App">
             <Header />
@@ -259,7 +314,8 @@ function App() {
                         faceBg={'White'}
                         faces={dice_face}
                         // cheatValue={5}
-                        triggers={['click', 'a', 'Enter']}
+                        rollingTime={150}
+                        triggers={isProcessing ? [] : ['click', 'a', 'Enter']} // Disable all triggers when processing
                     />
                 ) : (
                     <img src="/download.jpg" alt="download.jpg here" />
@@ -273,6 +329,9 @@ function App() {
                     :{' '}
                     <div className="ml-1 text-xl font-semibold tracking-widest">
                         {score}-{wickets}
+                    </div>
+                    <div className="ml-4 text-lg font-medium text-gray-700">
+                        Over: {currentOver}.{ballInOver}
                     </div>
                     <div
                         className="text-l ml-5 font-semibold text-blue-500"
@@ -297,6 +356,15 @@ function App() {
                     </div>
                 </div>
             </div>
+            
+            {/* Debug info to verify sync */}
+            <div className="text-xs text-gray-400 text-center mb-1">
+                Individual total: {players.reduce((sum, s) => sum + s, 0)} | Team score: {score}
+                {players.reduce((sum, s) => sum + s, 0) !== score && (
+                    <span className="text-red-400 ml-2">⚠️ DESYNC</span>
+                )}
+            </div>
+            
             {playerObj ? (
                 <ScoreCard
                     scorelist={players}
@@ -305,6 +373,7 @@ function App() {
                     striker={striker}
                     firstTeam={playerObj.team1}
                     secondTeam={playerObj.team2}
+                    players={innings === 1 ? playerObj.team1 : playerObj.team2}
                     innings={innings}
                 />
             ) : (
@@ -320,12 +389,12 @@ function App() {
                     </div>
                     {playerFell.map((data, id) =>
                         id <= 5 && data !== '' ? (
-                            <>
+                            <React.Fragment key={id}>
                                 <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
                                 <div className="mr-3 font-semibold">
                                     {fallOn[id]}/{id + 1}
                                 </div>
-                            </>
+                            </React.Fragment>
                         ) : null,
                     )}
                 </div>
@@ -334,12 +403,12 @@ function App() {
                     <div className="mr-3"> </div>
                     {playerFell.map((data, id) =>
                         id > 5 && data !== '' ? (
-                            <>
+                            <React.Fragment key={id}>
                                 <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
                                 <div className="mr-3 font-semibold">
                                     {fallOn[id]}/{id + 1}
                                 </div>
-                            </>
+                            </React.Fragment>
                         ) : null,
                     )}
                 </div>

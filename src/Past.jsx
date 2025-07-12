@@ -22,6 +22,21 @@ function Past() {
             
             if (data.success) {
                 console.log('Game data:', data.data);
+                console.log('Team1 data structure:', data.data.team1_data);
+                console.log('Team2 data structure:', data.data.team2_data);
+                
+                // Debug player data specifically
+                if (data.data.team1_data) {
+                    console.log('Team1 firstTeam:', data.data.team1_data.firstTeam);
+                    console.log('Team1 secondTeam:', data.data.team1_data.secondTeam);
+                    console.log('Team1 players:', data.data.team1_data.players);
+                }
+                if (data.data.team2_data) {
+                    console.log('Team2 firstTeam:', data.data.team2_data.firstTeam);
+                    console.log('Team2 secondTeam:', data.data.team2_data.secondTeam);
+                    console.log('Team2 players:', data.data.team2_data.players);
+                }
+                
                 setDetail(data.data); // Changed from data[0] to data.data
             } else {
                 setError('Failed to fetch match details');
@@ -75,6 +90,7 @@ function Past() {
                             striker={detail.team1_data.striker}
                             firstTeam={detail.team1_data.firstTeam}
                             secondTeam={detail.team1_data.secondTeam}
+                            players={detail.team1_data.players}
                             team1Score={detail.team1_data.score}
                             innings={1}
                         />
@@ -124,6 +140,7 @@ function Past() {
                             striker={detail.team2_data.striker}
                             firstTeam={detail.team2_data.firstTeam}
                             secondTeam={detail.team2_data.secondTeam}
+                            players={detail.team2_data.players}
                             innings={2}
                             team2Score={detail.team2_data.score}
                             team2wic={detail.team2_data.wickets}
