@@ -18,6 +18,8 @@ function ScoreCard({
     team2Score,
     team2wic,
     players, // Add players prop as fallback
+    currentOver, // Add over props
+    ballInOver,
 }) {
     // Helper function to get player name with multiple fallbacks
     const getPlayerName = (id) => {
@@ -105,6 +107,13 @@ function ScoreCard({
                             </th>
                         </tr>
                     ) : null}
+                    {(currentOver !== undefined || ballInOver !== undefined) && (
+                        <tr className="bg-blue-100">
+                            <td></td>
+                            <th>Overs</th>
+                            <th>{currentOver || 0}.{ballInOver || 0}</th>
+                        </tr>
+                    )}
                 </tbody>
             </Table>
         </div>

@@ -74,17 +74,26 @@ function Past() {
     return (
         <div>
             <Header />
-            <h2 className="mt-4 mb-6 text-center">Match History</h2>
+            <div className="flex flex-col items-center mt-6 mb-8">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                    📊 Match History 📊
+                </h2>
+                <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+            </div>
             <div>
                 {detail ? (
                     <div>
                         <div className="sm:w-screen flex flex-col items-center -mb-24">
-                            <h1 className="w-50 text-xl text-red-600 bg-yellow-300 rounded-md shadow-md">
-                                {detail.team1}
-                            </h1>
-                            <div className="text-sm mt-2 font-semibold text-gray-600">
-                                Score: {detail.team1_data.score}/{detail.team1_data.wickets} | 
-                                Overs: {detail.team1_data.currentOver || 0}.{detail.team1_data.ballInOver || 0}
+                            <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-8 py-3 rounded-2xl shadow-xl border-2 border-red-300 mb-3">
+                                <h1 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
+                                    🏏 {detail.team1} 🏏
+                                </h1>
+                            </div>
+                            <div className="bg-white px-4 py-2 rounded-lg shadow-md border border-gray-200">
+                                <div className="text-sm font-bold text-gray-700">
+                                    📊 Score: <span className="text-blue-600">{detail.team1_data.score}/{detail.team1_data.wickets}</span> | 
+                                    ⏰ Overs: <span className="text-green-600">{detail.team1_data.currentOver || 0}.{detail.team1_data.ballInOver || 0}</span>
+                                </div>
                             </div>
                         </div>
                         <ScoreCard
@@ -97,6 +106,8 @@ function Past() {
                             players={detail.team1_data.players}
                             team1Score={detail.team1_data.score}
                             innings={1}
+                            currentOver={detail.team1_data.currentOver}
+                            ballInOver={detail.team1_data.ballInOver}
                         />
 
                         <div className="flex flex-col items-center w-full">
@@ -133,12 +144,16 @@ function Past() {
                         </div>
 
                         <div className="sm:w-screen flex flex-col items-center -mb-24">
-                            <h1 className="w-50 text-xl text-red-600 bg-yellow-300 rounded-md shadow-md">
-                                {detail.team2}
-                            </h1>
-                            <div className="text-sm mt-2 font-semibold text-gray-600">
-                                Score: {detail.team2_data.score}/{detail.team2_data.wickets} | 
-                                Overs: {detail.team2_data.currentOver || 0}.{detail.team2_data.ballInOver || 0}
+                            <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-3 rounded-2xl shadow-xl border-2 border-blue-300 mb-3">
+                                <h1 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
+                                    🏏 {detail.team2} 🏏
+                                </h1>
+                            </div>
+                            <div className="bg-white px-4 py-2 rounded-lg shadow-md border border-gray-200">
+                                <div className="text-sm font-bold text-gray-700">
+                                    📊 Score: <span className="text-blue-600">{detail.team2_data.score}/{detail.team2_data.wickets}</span> | 
+                                    ⏰ Overs: <span className="text-green-600">{detail.team2_data.currentOver || 0}.{detail.team2_data.ballInOver || 0}</span>
+                                </div>
                             </div>
                         </div>
                         <ScoreCard
@@ -152,6 +167,8 @@ function Past() {
                             innings={2}
                             team2Score={detail.team2_data.score}
                             team2wic={detail.team2_data.wickets}
+                            currentOver={detail.team2_data.currentOver}
+                            ballInOver={detail.team2_data.ballInOver}
                         />
                         <div className="flex flex-col items-center w-full">
                             <div className=" flex flex-row">
@@ -186,8 +203,12 @@ function Past() {
                             </div>
                         </div>
 
-                        <div className="flex flex-col items-center">
-                            <h2 className="p-4 text-gray-100 bg-blue-700 rounded-lg shadow-lg">{detail.result}</h2>
+                        <div className="flex flex-col items-center mt-8">
+                            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl border-2 border-green-300 transform hover:scale-105 transition-all duration-300">
+                                <h2 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
+                                    🏆 {detail.result} 🏆
+                                </h2>
+                            </div>
                         </div>
                     </div>
                 ) : (
