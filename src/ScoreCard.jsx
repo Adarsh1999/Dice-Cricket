@@ -58,39 +58,47 @@ function ScoreCard({
                 striped={true}
                 bordered={true}
                 hover={true}
-                size={'sm'}
-                className="sm:w-full w-50 rounded-md shadow-lg"
+                className="w-full rounded-lg shadow-lg"
+                style={{ fontSize: '16px' }}
             >
                 <thead className="thead-dark">
                     <tr>
-                        <th scope="col" className="text-center">
+                        <th scope="col" className="text-center py-3 px-4">
                             #
                         </th>
-                        <th scope="col" className="text-center">
+                        <th scope="col" className="text-center py-3 px-4">
                             Players
                         </th>
-                        <th scope="col" className="text-center">
+                        <th scope="col" className="text-center py-3 px-4">
                             Score
                         </th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    {scorelist && scorelist.map((score, id) => (
-                        <tr key={id}
-                            className={`table-success ${(() => {
-                                return current && current.includes(id) && 'table-warning';
-                            })()} ${(() => {
-                                return status && status[id] === 1 && 'table-danger';
-                            })()} ${id === striker && 'custom'}`}
-                        >
-                            <th scope="row" className="text-center">
-                                {id + 1}
-                            </th>
-                            <td className=" text-center">{getPlayerName(id)}</td>
-                            <td className="text-center">{score}</td>
-                        </tr>
-                    ))}
+                    {scorelist && scorelist.map((score, id) => {
+                        const isCurrentBatsman = current && current.includes(id);
+                        const isOut = status && status[id] === 1;
+                        const isStriker = id === striker;
+                        
+                        return (
+                            <tr key={id}
+                                className={`
+                                    ${isOut ? 'table-danger' : isCurrentBatsman ? 'table-warning' : 'table-success'}
+                                `}
+                            >
+                                <th scope="row" className={`text-center py-3 px-4 ${isStriker ? 'font-bold text-lg' : 'font-semibold'}`}>
+                                    {id + 1}
+                                </th>
+                                <td className={`text-center py-3 px-4 ${isStriker ? 'font-bold text-lg' : 'font-medium'}`}>
+                                    {isStriker && '🏏 '}{getPlayerName(id)}
+                                </td>
+                                <td className={`text-center py-3 px-4 ${isStriker ? 'font-black text-xl' : 'font-bold'}`}>
+                                    {score}
+                                </td>
+                            </tr>
+                        );
+                    })}
                     {team1Score && innings === 1 ? (
                         <tr className="bg-green-300">
                             <td></td>

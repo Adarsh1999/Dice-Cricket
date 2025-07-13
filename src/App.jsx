@@ -307,142 +307,168 @@ function App() {
     }, []);
 
     return (
-        <div className="App">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
             <Header />
-            <div className="flex justify-center w-full m-4 shadow-none">
-                {wickets !== 10 && matchOver === 0 ? (
-                    <Dice
-                        onRoll={(value) => scoring(value)}
-                        size={90}
-                        sound={'/audio.mp3'}
-                        faceBg={'White'}
-                        faces={dice_face}
-                        // cheatValue={5}
-                        rollingTime={150}
-                        triggers={isProcessing ? [] : ['click', 'a', 'Enter']} // Disable all triggers when processing
-                    />
-                ) : (
-                    <img src="/download.jpg" alt="download.jpg here" />
-                )}
-                <div className="flex m-4">
-                    {innings === 1 ? (
-                        <div className="text-xl font-bold">{state.team1}</div>
-                    ) : (
-                        <div className="text-xl font-bold">{state.team2}</div>
-                    )}{' '}
-                    :{' '}
-                    <div className="ml-1 text-xl font-semibold tracking-widest">
-                        {score}-{wickets}
-                    </div>
-                    <div className="ml-4 text-lg font-medium text-gray-700">
-                        Over: {currentOver}.{ballInOver}
-                    </div>
-                    <div
-                        className="text-l ml-5 font-semibold text-blue-500"
-                        style={innings === 2 ? {} : { display: 'none' }}
-                    >
-                        Target Given: {totalTeamScore + 1}
-                        <br />
-                        Need {totalTeamScore + 1 - score >= 0 ? totalTeamScore + 1 - score : 0} runs to win
-                        <span>
-                            {matchOver === 1 && totalTeamScore > score ? (
-                                <div className="text-2xl font-bold text-green-700">
-                                    {state.team1} won by {totalTeamScore - score} runs
+            
+            {/* Compact Match Interface */}
+            <div className="max-w-7xl mx-auto px-4 py-2">
+                
+                {/* Top Score Bar */}
+                <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 mb-4 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        
+                        {/* Team & Score */}
+                        <div className="flex items-center gap-4">
+                            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg">
+                                <span className="text-lg font-bold">
+                                    🏏 {innings === 1 ? state.team1?.replace('_', ' ') : state.team2?.replace('_', ' ')}
+                                </span>
+                            </div>
+                            <div className="text-3xl font-bold text-gray-800">
+                                {score}<span className="text-red-500">/{wickets}</span>
+                            </div>
+                            <div className="text-sm text-gray-600 font-semibold">
+                                ⏰ Over: <span className="text-blue-600">{currentOver}.{ballInOver}</span>
+                            </div>
+                        </div>
+                        
+                        {/* Target Info */}
+                        <div className="flex items-center gap-4">
+                            {innings === 2 && (
+                                <div className="bg-gradient-to-r from-green-100 to-emerald-100 px-4 py-2 rounded-xl border border-green-200">
+                                    <span className="text-sm font-bold text-green-700">🎯 Need: {totalTeamScore + 1 - score >= 0 ? totalTeamScore + 1 - score : 0}</span>
                                 </div>
-                            ) : matchOver === 1 && score > totalTeamScore ? (
-                                <div className="ml-3 text-xl font-bold text-green-700">
-                                    {state.team2} won by {10 - wickets} wickets
-                                </div>
-                            ) : (
-                                console.log('matchover')
                             )}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            
-            {/* Debug info to verify sync */}
-            <div className="text-xs text-gray-400 text-center mb-1">
-                Individual total: {players.reduce((sum, s) => sum + s, 0)} | Team score: {score}
-                {players.reduce((sum, s) => sum + s, 0) !== score && (
-                    <span className="text-red-400 ml-2">⚠️ DESYNC</span>
-                )}
-            </div>
-            
-            {playerObj ? (
-                <ScoreCard
-                    scorelist={players}
-                    current={currentPlayers}
-                    status={playersOut}
-                    striker={striker}
-                    firstTeam={playerObj.team1}
-                    secondTeam={playerObj.team2}
-                    players={innings === 1 ? playerObj.team1 : playerObj.team2}
-                    innings={innings}
-                />
-            ) : (
-                <h1>Loading</h1>
-            )}
-
-            <div className="flex flex-col items-center w-full">
-                {' '}
-                <div className=" flex flex-row">
-                    {' '}
-                    <div className="text-gray-50 p-1 ml-6 mr-3 font-semibold bg-gray-700 rounded-lg">
-                        Fall of Wickets:{' '}
-                    </div>
-                    {playerFell.map((data, id) =>
-                        id <= 5 && data !== '' ? (
-                            <React.Fragment key={id}>
-                                <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
-                                <div className="mr-3 font-semibold">
-                                    {fallOn[id]}/{id + 1}
+                            {innings === 1 && (
+                                <div className="bg-gradient-to-r from-orange-100 to-red-100 px-4 py-2 rounded-xl border border-orange-200">
+                                    <span className="text-sm font-bold text-orange-700">🥇 First Innings</span>
                                 </div>
-                            </React.Fragment>
-                        ) : null,
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Match Result */}
+                    {matchOver === 1 && (
+                        <div className="mt-3 text-center">
+                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-2 rounded-xl shadow-lg inline-block">
+                                <span className="text-lg font-bold">
+                                    🏆 {totalTeamScore > score ? 
+                                        `${state.team1?.replace('_', ' ')} won by ${totalTeamScore - score} runs` : 
+                                        `${state.team2?.replace('_', ' ')} won by ${10 - wickets} wickets`
+                                    } 🏆
+                                </span>
+                            </div>
+                        </div>
                     )}
                 </div>
-                <div className="flex flex-row mt-3 mb-4 ml-8">
-                    {' '}
-                    <div className="mr-3"> </div>
-                    {playerFell.map((data, id) =>
-                        id > 5 && data !== '' ? (
-                            <React.Fragment key={id}>
-                                <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
-                                <div className="mr-3 font-semibold">
-                                    {fallOn[id]}/{id + 1}
+                
+                {/* Main Game Area - Side by Side */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-200px)]">
+                    
+                    {/* Left: Dice & Controls */}
+                    <div className="lg:col-span-4 flex flex-col">
+                        
+                        {/* Dice Area */}
+                        <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 p-6 mb-4 flex-1 flex flex-col justify-center items-center">
+                            <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-4 rounded-full shadow-2xl border-4 border-white mb-4">
+                                {wickets !== 10 && matchOver === 0 ? (
+                                    <Dice
+                                        onRoll={(value) => scoring(value)}
+                                        size={100}
+                                        sound={'/audio.mp3'}
+                                        faceBg={'White'}
+                                        faces={dice_face}
+                                        rollingTime={150}
+                                        triggers={isProcessing ? [] : ['click', 'a', 'Enter']}
+                                    />
+                                ) : (
+                                    <div className="w-24 h-24 bg-gray-200 rounded-xl flex items-center justify-center">
+                                        <span className="text-3xl">🏏</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="text-center">
+                                <div className="text-lg font-bold text-gray-700">🎲 Roll the Dice!</div>
+                                <div className="text-sm text-gray-500">Click, Press 'A' or Enter</div>
+                            </div>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex flex-col gap-3">
+                            <button
+                                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
+                                onClick={() => afterEffect()}
+                                disabled={innings === 2}
+                            >
+                                🏏 Next Innings
+                            </button>
+                            
+                            <Link to={{ pathname: '/summary' }}>
+                                <button
+                                    disabled={innings === 1}
+                                    className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
+                                    onClick={() => dispatchTeam2()}
+                                >
+                                    📊 Match Summary
+                                </button>
+                            </Link>
+                        </div>
+                    </div>
+                    
+                    {/* Right: Scorecard */}
+                    <div className="lg:col-span-8">
+                        <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 p-6 h-full overflow-auto">
+                            
+                            {/* Debug info - Commented for cleaner UI */}
+                            {/* <div className="text-xs text-gray-400 text-center mb-2">
+                                Individual total: {players.reduce((sum, s) => sum + s, 0)} | Team score: {score}
+                                {players.reduce((sum, s) => sum + s, 0) !== score && (
+                                    <span className="text-red-400 ml-2">⚠️ DESYNC</span>
+                                )}
+                            </div> */}
+                            
+                            {playerObj ? (
+                                <ScoreCard
+                                    scorelist={players}
+                                    current={currentPlayers}
+                                    status={playersOut}
+                                    striker={striker}
+                                    firstTeam={playerObj.team1}
+                                    secondTeam={playerObj.team2}
+                                    players={innings === 1 ? playerObj.team1 : playerObj.team2}
+                                    innings={innings}
+                                    currentOver={currentOver}
+                                    ballInOver={ballInOver}
+                                />
+                            ) : (
+                                <div className="text-center py-12">
+                                    <div className="text-4xl mb-4">🏏</div>
+                                    <div className="text-xl font-semibold text-gray-600">Loading player data...</div>
                                 </div>
-                            </React.Fragment>
-                        ) : null,
-                    )}
+                            )}
+                            
+                            {/* Fall of Wickets - Compact */}
+                            {playerFell.filter(data => data !== '').length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <h4 className="text-lg font-bold text-red-700 mb-3 text-center">⚡ Fall of Wickets</h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                        {playerFell.map((data, id) =>
+                                            data !== '' ? (
+                                                <div key={id} className="bg-gradient-to-r from-red-100 to-orange-100 p-2 rounded-lg border border-red-200 text-center">
+                                                    <div className="text-sm font-bold text-red-700">{data}</div>
+                                                    <div className="text-xs font-semibold text-red-600">
+                                                        {fallOn[id]}/{id + 1}
+                                                    </div>
+                                                </div>
+                                            ) : null,
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <div className="flex justify-around">
-                <button
-                    className="hover:bg-blue-600 focus:outline-none disabled:opacity-50 px-4 py-2 font-semibold text-center text-white no-underline bg-blue-500 rounded-lg shadow-md"
-                    // disabled={(wickets)=>wickets===10?false:true}
-                    onClick={() => afterEffect()}
-                    disabled={innings === 2 ? true : false}
-                >
-                    Next Innings
-                </button>
-                {matchOver ? <div>Match over</div> : <h1></h1>}
-
-                <Link
-                    to={{
-                        pathname: '/summary',
-                    }}
-                >
-                    <button
-                        disabled={innings === 1 ? true : false}
-                        className="hover:bg-blue-600 focus:outline-none disabled:opacity-50 px-4 py-2 font-semibold text-center text-white no-underline bg-blue-500 rounded-lg shadow-md"
-                        // className="flex justify-center"
-                        onClick={() => dispatchTeam2()}
-                    >
-                        Match Summary
-                    </button>
-                </Link>
             </div>
         </div>
 

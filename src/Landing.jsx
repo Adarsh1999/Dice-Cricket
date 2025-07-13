@@ -66,7 +66,7 @@ function Landing() {
                     </Link>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-center gap-6 mt-8">
+                <div className="flex flex-col sm:flex-row justify-center gap-5 mt-8">
                     <div className="bg-gradient-to-r from-red-100 to-pink-100 border-2 border-red-300 hover:border-red-500 px-6 py-3 text-xl font-bold rounded-2xl shadow-lg text-red-700 transform hover:scale-105 transition-all duration-300 cursor-pointer">
                         🪙 Heads
                     </div>
