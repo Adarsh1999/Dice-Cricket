@@ -96,19 +96,21 @@ function Past() {
                                 </div>
                             </div>
                         </div>
-                        <ScoreCard
-                            scorelist={detail.team1_data.scorelist}
-                            current={detail.team1_data.current}
-                            status={detail.team1_data.status}
-                            striker={detail.team1_data.striker}
-                            firstTeam={detail.team1_data.firstTeam}
-                            secondTeam={detail.team1_data.secondTeam}
-                            players={detail.team1_data.players}
-                            team1Score={detail.team1_data.score}
-                            innings={1}
-                            currentOver={detail.team1_data.currentOver}
-                            ballInOver={detail.team1_data.ballInOver}
-                        />
+                        <div className="max-w-4xl mx-auto px-4 mb-8">
+                            <ScoreCard
+                                scorelist={detail.team1_data.scorelist}
+                                current={detail.team1_data.current}
+                                status={detail.team1_data.status}
+                                striker={detail.team1_data.striker}
+                                firstTeam={detail.team1_data.firstTeam}
+                                secondTeam={detail.team1_data.secondTeam}
+                                players={detail.team1_data.players}
+                                team1Score={detail.team1_data.score}
+                                innings={1}
+                                currentOver={detail.team1_data.currentOver}
+                                ballInOver={detail.team1_data.ballInOver}
+                            />
+                        </div>
 
                         <div className="flex flex-col items-center w-full">
                             <div className=" flex flex-row">
@@ -156,20 +158,22 @@ function Past() {
                                 </div>
                             </div>
                         </div>
-                        <ScoreCard
-                            scorelist={detail.team2_data.scorelist}
-                            current={detail.team2_data.current}
-                            status={detail.team2_data.status}
-                            striker={detail.team2_data.striker}
-                            firstTeam={detail.team2_data.firstTeam}
-                            secondTeam={detail.team2_data.secondTeam}
-                            players={detail.team2_data.players}
-                            innings={2}
-                            team2Score={detail.team2_data.score}
-                            team2wic={detail.team2_data.wickets}
-                            currentOver={detail.team2_data.currentOver}
-                            ballInOver={detail.team2_data.ballInOver}
-                        />
+                        <div className="max-w-4xl mx-auto px-4 mb-8">
+                            <ScoreCard
+                                scorelist={detail.team2_data.scorelist}
+                                current={detail.team2_data.current}
+                                status={detail.team2_data.status}
+                                striker={detail.team2_data.striker}
+                                firstTeam={detail.team2_data.firstTeam}
+                                secondTeam={detail.team2_data.secondTeam}
+                                players={detail.team2_data.players}
+                                innings={2}
+                                team2Score={detail.team2_data.score}
+                                team2wic={detail.team2_data.wickets}
+                                currentOver={detail.team2_data.currentOver}
+                                ballInOver={detail.team2_data.ballInOver}
+                            />
+                        </div>
                         <div className="flex flex-col items-center w-full">
                             <div className=" flex flex-row">
                                 {' '}
