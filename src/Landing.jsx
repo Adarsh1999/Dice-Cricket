@@ -27,11 +27,11 @@ function Landing() {
     return (
         <div className="bg-gradient-to-br from-gray-50 to-white min-h-screen flex flex-col items-center">
             <div className="max-w-6xl w-full p-8 m-auto">
-                <div className="text-center mb-12">
-                    <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                <div className="text-center mb-4">
+                    <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 leading-tight">
                         🏏 Welcome to Dice Cricket! 🎲
                     </h1>
-                    <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-6"></div>
+                    <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-8"></div>
                     <p className="text-xl text-gray-600 font-medium">Choose your teams and let the dice decide your destiny!</p>
                 </div>
             <Teams
@@ -121,16 +121,16 @@ function Landing() {
                         </div>
                     )}
                 </div>
-                <div className="mt-8 text-center">
+                <div className="mt-8 flex justify-center">
                     {isTossed ? (
-                        <div className="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-300 px-6 py-4 rounded-2xl shadow-lg">
-                            <div className="text-2xl font-bold text-green-700 mb-2">🎉 Toss Result!</div>
-                            <div className="text-lg font-semibold text-green-800">
-                                🏏 {team1Selected.replace('_', ' ')} won the toss and chose to bat first!
+                        <div className="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-300 px-8 py-6 rounded-2xl shadow-lg text-center max-w-md">
+                            <div className="text-3xl font-bold text-green-700 mb-3">🎉 Toss Result! 🎉</div>
+                            <div className="text-lg font-semibold text-green-800 leading-relaxed">
+                                🏏 <span className="font-bold text-green-900">{team1Selected.replace('_', ' ')}</span> won the toss and chose to bat first!
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 px-6 py-4 rounded-2xl">
+                        <div className="bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 px-8 py-6 rounded-2xl text-center">
                             <div className="text-lg font-semibold text-gray-500">
                                 🪙 Waiting for coin toss...
                             </div>

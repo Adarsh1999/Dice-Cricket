@@ -50,8 +50,12 @@ function CoinToss(params) {
             </div>
 
             {params.isTossed && (
-                <div className="m-4 -mb-2 text-lg font-bold text-pink-600 border-2 border-fuchsia-700 rounded-xl px-2">
-                    It landed on {side === 1 ? 'heads' : 'tails'}
+                <div className="flex justify-center mt-6 mb-2">
+                    <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300 px-6 py-3 rounded-2xl shadow-lg text-center">
+                        <div className="text-lg font-bold text-purple-700">
+                            🪙 It landed on <span className="text-purple-900 capitalize">{side === 1 ? 'heads' : 'tails'}</span>! 🪙
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
