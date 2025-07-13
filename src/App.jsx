@@ -80,6 +80,8 @@ function App() {
                     wickets: 10,
                     fallOn: fallOn,
                     playerFell: playerFell,
+                    currentOver: currentOver,
+                    ballInOver: ballInOver,
                 },
             });
             setTotalTeamScore(score);
@@ -187,6 +189,8 @@ function App() {
                 wickets: wickets,
                 fallOn: fallOn,
                 playerFell: playerFell,
+                currentOver: currentOver,
+                ballInOver: ballInOver,
             },
         });
     };

@@ -28,14 +28,20 @@ function Summary() {
                     // Ensure all player name formats are available
                     players: state.team1_data.firstTeam || state.team1_data.players || [],
                     firstTeam: state.team1_data.firstTeam || state.team1_data.players || [],
-                    secondTeam: state.team1_data.secondTeam || []
+                    secondTeam: state.team1_data.secondTeam || [],
+                    // Add over data with defaults for backward compatibility
+                    currentOver: state.team1_data.currentOver || 0,
+                    ballInOver: state.team1_data.ballInOver || 0
                 },
                 team2_data: {
                     ...state.team2_data,
                     // Ensure all player name formats are available
                     players: state.team2_data.secondTeam || state.team2_data.players || [],
                     firstTeam: state.team2_data.firstTeam || [],
-                    secondTeam: state.team2_data.secondTeam || state.team2_data.players || []
+                    secondTeam: state.team2_data.secondTeam || state.team2_data.players || [],
+                    // Add over data with defaults for backward compatibility
+                    currentOver: state.team2_data.currentOver || 0,
+                    ballInOver: state.team2_data.ballInOver || 0
                 }
             };
 
@@ -107,6 +113,11 @@ function Summary() {
                         <th>Total Score</th>
                         <th>{state.team1_data.score} / 10</th>
                     </tr>
+                    <tr className="bg-blue-100">
+                        <td></td>
+                        <th>Overs</th>
+                        <th>{state.team1_data.currentOver || 0}.{state.team1_data.ballInOver || 0}</th>
+                    </tr>
                 </tbody>
             </Table>
             
@@ -170,6 +181,11 @@ function Summary() {
                         <th>
                             {state.team2_data.score} / {state.team2_data.wickets}
                         </th>
+                    </tr>
+                    <tr className="bg-blue-100">
+                        <td></td>
+                        <th>Overs</th>
+                        <th>{state.team2_data.currentOver || 0}.{state.team2_data.ballInOver || 0}</th>
                     </tr>
                 </tbody>
             </Table>
