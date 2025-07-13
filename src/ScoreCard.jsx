@@ -1,10 +1,8 @@
 /* eslint-disable react/jsx-key */
 /* eslint-disable react/prop-types */
 import React from 'react';
-import Table from 'react-bootstrap/Table';
 import './ScoreCard.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'tailwindcss/tailwind.css'; // Import tailwind CSS
+import 'tailwindcss/tailwind.css';
 
 function ScoreCard({
     scorelist,
@@ -17,8 +15,8 @@ function ScoreCard({
     team1Score,
     team2Score,
     team2wic,
-    players, // Add players prop as fallback
-    currentOver, // Add over props
+    players,
+    currentOver,
     ballInOver,
 }) {
     // Helper function to get player name with multiple fallbacks
@@ -26,14 +24,11 @@ function ScoreCard({
         let playerName = '';
         
         if (innings === 1) {
-            // For team 1, try multiple sources
             playerName = firstTeam?.[id] || players?.[id] || '';
         } else {
-            // For team 2, try multiple sources  
             playerName = secondTeam?.[id] || players?.[id] || '';
         }
         
-        // If still empty, provide a fallback
         if (!playerName || playerName === '') {
             playerName = `Player ${id + 1}`;
         }
@@ -41,89 +36,254 @@ function ScoreCard({
         return playerName;
     };
 
-    // Debug logging for the first render
-    React.useEffect(() => {
-        console.log('ScoreCard props:', {
-            innings,
-            firstTeam,
-            secondTeam,
-            players,
-            scorelist: scorelist?.length
-        });
-    }, [innings, firstTeam, secondTeam, players, scorelist]);
+    // Get player status icon and styling
+    const getPlayerStatus = (id) => {
+        const isCurrentBatsman = current && current.includes(id);
+        const isOut = status && status[id] === 1;
+        const isStriker = id === striker;
+        
+        if (isOut) {
+            return {
+                icon: '❌',
+                bgClass: 'from-red-500 to-red-700',
+                textClass: 'text-white',
+                borderClass: 'border-red-300',
+                status: 'OUT'
+            };
+        }
+        
+        if (isStriker) {
+            return {
+                icon: '🏏',
+                bgClass: 'from-yellow-400 to-orange-500',
+                textClass: 'text-white',
+                borderClass: 'border-yellow-300',
+                status: 'STRIKER'
+            };
+        }
+        
+        if (isCurrentBatsman) {
+            return {
+                icon: '⚡',
+                bgClass: 'from-green-400 to-emerald-500',
+                textClass: 'text-white',
+                borderClass: 'border-green-300',
+                status: 'BATTING'
+            };
+        }
+        
+        return {
+            icon: '🏃',
+            bgClass: 'from-gray-100 to-gray-200',
+            textClass: 'text-gray-700',
+            borderClass: 'border-gray-200',
+            status: 'WAITING'
+        };
+    };
 
     return (
-        <div className="scorecard">
-            <Table
-                striped={true}
-                bordered={true}
-                hover={true}
-                className="w-full rounded-lg shadow-lg"
-                style={{ fontSize: '16px' }}
-            >
-                <thead className="thead-dark">
-                    <tr>
-                        <th scope="col" className="text-center py-3 px-4">
-                            #
-                        </th>
-                        <th scope="col" className="text-center py-3 px-4">
-                            Players
-                        </th>
-                        <th scope="col" className="text-center py-3 px-4">
-                            Score
-                        </th>
-                    </tr>
-                </thead>
+        <div className="w-full max-w-6xl mx-auto">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-t-2xl p-4 shadow-2xl">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-white rounded-full p-2 shadow-lg">
+                            <span className="text-2xl">🏏</span>
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-white">
+                                {innings === 1 ? 'First Innings' : 'Second Innings'}
+                            </h2>
+                            <p className="text-indigo-100 font-semibold">
+                                {innings === 1 ? 'Team 1' : 'Team 2'} Batting
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {/* Live Match Stats */}
+                    <div className="flex gap-4">
+                        <div className="bg-white/20 backdrop-blur rounded-xl p-3 text-center">
+                            <div className="text-white text-sm font-semibold">OVERS</div>
+                            <div className="text-white text-xl font-bold">
+                                {currentOver || 0}.{ballInOver || 0}
+                            </div>
+                        </div>
+                        <div className="bg-white/20 backdrop-blur rounded-xl p-3 text-center">
+                            <div className="text-white text-sm font-semibold">SCORE</div>
+                            <div className="text-white text-xl font-bold">
+                                {scorelist?.reduce((sum, score) => sum + score, 0) || 0}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <tbody>
-                    {scorelist && scorelist.map((score, id) => {
-                        const isCurrentBatsman = current && current.includes(id);
-                        const isOut = status && status[id] === 1;
-                        const isStriker = id === striker;
-                        
-                        return (
-                            <tr key={id}
-                                className={`
-                                    ${isOut ? 'table-danger' : isCurrentBatsman ? 'table-warning' : 'table-success'}
-                                `}
-                            >
-                                <th scope="row" className={`text-center py-3 px-4 ${isStriker ? 'font-bold text-lg' : 'font-semibold'}`}>
-                                    {id + 1}
-                                </th>
-                                <td className={`text-center py-3 px-4 ${isStriker ? 'font-bold text-lg' : 'font-medium'}`}>
-                                    {isStriker && '🏏 '}{getPlayerName(id)}
-                                </td>
-                                <td className={`text-center py-3 px-4 ${isStriker ? 'font-black text-xl' : 'font-bold'}`}>
-                                    {score}
-                                </td>
-                            </tr>
-                        );
-                    })}
-                    {team1Score && innings === 1 ? (
-                        <tr className="bg-green-300">
-                            <td></td>
-                            <th>Total Score</th>
-                            <th>{team1Score} / 10</th>
-                        </tr>
-                    ) : null}
-                    {team2Score && innings === 2 ? (
-                        <tr className="bg-green-300">
-                            <td></td>
-                            <th>Total Score</th>
-                            <th>
-                                {team2Score} / {team2wic}
-                            </th>
-                        </tr>
-                    ) : null}
-                    {(currentOver !== undefined || ballInOver !== undefined) && (
-                        <tr className="bg-blue-100">
-                            <td></td>
-                            <th>Overs</th>
-                            <th>{currentOver || 0}.{ballInOver || 0}</th>
-                        </tr>
+            {/* Players Grid */}
+            <div className="bg-gradient-to-br from-white to-gray-50 rounded-b-2xl shadow-2xl border-l-4 border-r-4 border-b-4 border-indigo-200">
+                <div className="p-6">
+                    
+                    {/* Current Batting Partnership (if applicable) */}
+                    {current && current.length >= 2 && (
+                        <div className="mb-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-200">
+                            <h3 className="text-lg font-bold text-emerald-800 mb-3 text-center">
+                                🤝 Current Partnership
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                {current.slice(0, 2).map((playerId) => {
+                                    const playerStatus = getPlayerStatus(playerId);
+                                    const score = scorelist?.[playerId] || 0;
+                                    
+                                    return (
+                                        <div key={playerId} className={`bg-gradient-to-r ${playerStatus.bgClass} rounded-xl p-4 shadow-lg transform hover:scale-105 transition-all duration-300`}>
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <div className={`text-lg font-bold ${playerStatus.textClass}`}>
+                                                        {playerStatus.icon} {getPlayerName(playerId)}
+                                                    </div>
+                                                    <div className={`text-sm font-semibold ${playerStatus.textClass} opacity-90`}>
+                                                        {playerStatus.status}
+                                                    </div>
+                                                </div>
+                                                <div className={`text-3xl font-black ${playerStatus.textClass}`}>
+                                                    {score}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     )}
-                </tbody>
-            </Table>
+
+                    {/* All Players Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {scorelist && scorelist.map((score, id) => {
+                            const playerStatus = getPlayerStatus(id);
+                            const playerName = getPlayerName(id);
+                            
+                            return (
+                                <div 
+                                    key={id}
+                                    className={`relative bg-gradient-to-r ${playerStatus.bgClass} rounded-2xl p-4 shadow-lg border-2 ${playerStatus.borderClass} transform hover:scale-105 transition-all duration-300 hover:shadow-2xl`}
+                                >
+                                    {/* Player Number Badge */}
+                                    <div className="absolute -top-2 -left-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg">
+                                        {id + 1}
+                                    </div>
+                                    
+                                    {/* Status Badge */}
+                                    <div className="absolute -top-2 -right-2">
+                                        <div className="bg-white rounded-full p-1 shadow-lg">
+                                            <span className="text-lg">{playerStatus.icon}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Player Info */}
+                                    <div className="mt-2">
+                                        <div className={`font-bold text-lg ${playerStatus.textClass} mb-1`}>
+                                            {playerName}
+                                        </div>
+                                        <div className={`text-sm font-semibold ${playerStatus.textClass} opacity-80 mb-2`}>
+                                            {playerStatus.status}
+                                        </div>
+                                        
+                                        {/* Score Display */}
+                                        <div className="flex items-center justify-between">
+                                            <div className={`text-3xl font-black ${playerStatus.textClass}`}>
+                                                {score}
+                                            </div>
+                                            
+                                            {/* Performance Indicator */}
+                                            <div className="flex flex-col items-end">
+                                                <div className={`text-xs font-bold ${playerStatus.textClass} opacity-70`}>
+                                                    RUNS
+                                                </div>
+                                                {score >= 50 && (
+                                                    <div className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">
+                                                        50+
+                                                    </div>
+                                                )}
+                                                {score >= 30 && score < 50 && (
+                                                    <div className="bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">
+                                                        30+
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Striker Highlight */}
+                                    {id === striker && (
+                                        <div className="absolute inset-0 rounded-2xl border-4 border-yellow-300 animate-pulse pointer-events-none"></div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Team Total Summary */}
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        
+                        {/* Total Score Card */}
+                        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-2xl transform hover:scale-105 transition-all duration-300">
+                            <div className="text-center">
+                                <div className="text-lg font-bold mb-2">📊 TEAM TOTAL</div>
+                                <div className="text-4xl font-black">
+                                    {scorelist?.reduce((sum, score) => sum + score, 0) || 0}
+                                </div>
+                                <div className="text-sm font-semibold opacity-90 mt-1">
+                                    Total Runs Scored
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Wickets Card */}
+                        <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl p-6 text-white shadow-2xl transform hover:scale-105 transition-all duration-300">
+                            <div className="text-center">
+                                <div className="text-lg font-bold mb-2">⚡ WICKETS</div>
+                                <div className="text-4xl font-black">
+                                    {status?.filter(s => s === 1).length || 0}/10
+                                </div>
+                                <div className="text-sm font-semibold opacity-90 mt-1">
+                                    Players Dismissed
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Overs Card */}
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-2xl transform hover:scale-105 transition-all duration-300">
+                            <div className="text-center">
+                                <div className="text-lg font-bold mb-2">⏰ OVERS</div>
+                                <div className="text-4xl font-black">
+                                    {currentOver || 0}.{ballInOver || 0}
+                                </div>
+                                <div className="text-sm font-semibold opacity-90 mt-1">
+                                    Overs Bowled
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Legacy Total Rows (for backward compatibility) */}
+                    {team1Score && innings === 1 && (
+                        <div className="mt-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl p-4 border border-green-200">
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold text-green-800">🏆 First Innings Total</span>
+                                <span className="text-2xl font-black text-green-800">{team1Score} / 10</span>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {team2Score && innings === 2 && (
+                        <div className="mt-4 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl p-4 border border-blue-200">
+                            <div className="flex justify-between items-center">
+                                <span className="font-bold text-blue-800">🎯 Second Innings Total</span>
+                                <span className="text-2xl font-black text-blue-800">{team2Score} / {team2wic}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
