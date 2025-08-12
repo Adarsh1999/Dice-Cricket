@@ -18,6 +18,8 @@ function ScoreCard({
     players,
     currentOver,
     ballInOver,
+    fallOn,
+    playerFell,
 }) {
     // Helper function to get player name with multiple fallbacks
     const getPlayerName = (id) => {
@@ -34,6 +36,26 @@ function ScoreCard({
         }
         
         return playerName;
+    };
+
+    // Calculate current partnership value
+    const getCurrentPartnership = () => {
+        if (!current || current.length < 2 || !fallOn || !scorelist) {
+            return 0;
+        }
+        
+        const currentScore = scorelist.reduce((sum, score) => sum + score, 0);
+        
+        // Find the last wicket that fell (highest score in fallOn array that has a value)
+        let lastWicketScore = 0;
+        for (let i = fallOn.length - 1; i >= 0; i--) {
+            if (fallOn[i] !== '' && fallOn[i] !== undefined) {
+                lastWicketScore = parseInt(fallOn[i]) || 0;
+                break;
+            }
+        }
+        
+        return Math.max(0, currentScore - lastWicketScore);
     };
 
     // Get player status icon and styling
@@ -114,6 +136,15 @@ function ScoreCard({
                                 {scorelist?.reduce((sum, score) => sum + score, 0) || 0}
                             </div>
                         </div>
+                        {/* Compact Partnership Stat */}
+                        {current && current.length >= 2 && (
+                            <div className="bg-white/20 backdrop-blur rounded-xl p-3 text-center">
+                                <div className="text-white text-sm font-semibold">PARTNERSHIP</div>
+                                <div className="text-white text-xl font-bold">
+                                    {getCurrentPartnership()}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -122,35 +153,37 @@ function ScoreCard({
             <div className="bg-gradient-to-br from-white to-gray-50 rounded-b-2xl shadow-2xl border-l-4 border-r-4 border-b-4 border-indigo-200">
                 <div className="p-6">
                     
-                    {/* Current Batting Partnership (if applicable) */}
+                    {/* Refined Partnership Card (medium size) */}
                     {current && current.length >= 2 && (
-                        <div className="mb-6 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-200">
-                            <h3 className="text-lg font-bold text-emerald-800 mb-3 text-center">
-                                🤝 Current Partnership
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                {current.slice(0, 2).map((playerId) => {
-                                    const playerStatus = getPlayerStatus(playerId);
-                                    const score = scorelist?.[playerId] || 0;
-                                    
-                                    return (
-                                        <div key={playerId} className={`bg-gradient-to-r ${playerStatus.bgClass} rounded-xl p-4 shadow-lg transform hover:scale-105 transition-all duration-300`}>
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <div className={`text-lg font-bold ${playerStatus.textClass}`}>
-                                                        {playerStatus.icon} {getPlayerName(playerId)}
-                                                    </div>
-                                                    <div className={`text-sm font-semibold ${playerStatus.textClass} opacity-90`}>
-                                                        {playerStatus.status}
-                                                    </div>
-                                                </div>
-                                                <div className={`text-3xl font-black ${playerStatus.textClass}`}>
-                                                    {score}
-                                                </div>
-                                            </div>
+                        <div className="mb-5">
+                            <div className="w-full bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200 rounded-2xl p-4 shadow-xl">
+                                <div className="flex items-center gap-4 justify-between flex-wrap">
+                                    {/* Title */}
+                                    <div className="flex items-center gap-2 text-emerald-800">
+                                        <span className="text-xl">🤝</span>
+                                        <span className="text-lg font-bold">Current Partnership</span>
+                                    </div>
+                                    {/* Runs badge */}
+                                    <div className="flex items-center gap-2">
+                                        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg">
+                                            <span className="text-2xl font-black">{getCurrentPartnership()}</span>
                                         </div>
-                                    );
-                                })}
+                                        <span className="text-emerald-700 font-semibold">runs</span>
+                                    </div>
+                                    {/* Player chips */}
+                                    <div className="flex items-center gap-2">
+                                        {current.slice(0, 2).map((playerId, idx) => (
+                                            <div key={playerId} className="flex items-center gap-2 bg-white text-emerald-800 border border-emerald-200 rounded-full px-3 py-1 shadow">
+                                                <span className="text-sm font-semibold truncate max-w-[140px]">
+                                                    {idx === 0 ? '🟨' : '🟩'} {getPlayerName(playerId)}
+                                                </span>
+                                                <span className="text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full px-2 py-0.5">
+                                                    {scorelist?.[playerId] || 0}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -263,6 +296,49 @@ function ScoreCard({
                             </div>
                         </div>
                     </div>
+
+                    {/* Fall of Wickets - Enhanced */}
+                    {playerFell && playerFell.filter(data => data !== '').length > 0 && (
+                        <div className="mt-6 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 rounded-2xl p-6 border-2 border-red-200 shadow-xl">
+                            <div className="text-center mb-6">
+                                <h3 className="text-2xl font-bold text-red-800 mb-2">
+                                    ⚡ Fall of Wickets
+                                </h3>
+                                <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-xl shadow-lg inline-block">
+                                    <span className="text-lg font-bold">
+                                        {playerFell.filter(data => data !== '').length} wickets fallen
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {playerFell.map((data, id) =>
+                                    data !== '' ? (
+                                        <div key={id} className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl p-4 shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-red-300">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <div className="text-lg font-bold">
+                                                        💥 {data}
+                                                    </div>
+                                                    <div className="text-sm font-semibold opacity-90">
+                                                        Wicket #{id + 1}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-2xl font-black">
+                                                        {fallOn[id]}
+                                                    </div>
+                                                    <div className="text-sm font-semibold opacity-90">
+                                                        Score
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : null,
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Legacy Total Rows (for backward compatibility) */}
                     {team1Score && innings === 1 && (

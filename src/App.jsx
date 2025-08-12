@@ -439,6 +439,8 @@ function App() {
                                     innings={innings}
                                     currentOver={currentOver}
                                     ballInOver={ballInOver}
+                                    fallOn={fallOn}
+                                    playerFell={playerFell}
                                 />
                             ) : (
                                 <div className="text-center py-12">
@@ -447,24 +449,7 @@ function App() {
                                 </div>
                             )}
                             
-                            {/* Fall of Wickets - Compact */}
-                            {playerFell.filter(data => data !== '').length > 0 && (
-                                <div className="mt-4 pt-4 border-t border-gray-200">
-                                    <h4 className="text-lg font-bold text-red-700 mb-3 text-center">⚡ Fall of Wickets</h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                        {playerFell.map((data, id) =>
-                                            data !== '' ? (
-                                                <div key={id} className="bg-gradient-to-r from-red-100 to-orange-100 p-2 rounded-lg border border-red-200 text-center">
-                                                    <div className="text-sm font-bold text-red-700">{data}</div>
-                                                    <div className="text-xs font-semibold text-red-600">
-                                                        {fallOn[id]}/{id + 1}
-                                                    </div>
-                                                </div>
-                                            ) : null,
-                                        )}
-                                    </div>
-                                </div>
-                            )}
+
                         </div>
                     </div>
                 </div>
