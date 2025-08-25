@@ -313,111 +313,77 @@ function App() {
             {/* Compact Match Interface */}
             <div className="max-w-7xl mx-auto px-4 py-2">
                 
-                {/* Top Score Bar */}
-                <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 mb-4 p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        
-                        {/* Team & Score */}
-                        <div className="flex items-center gap-4">
-                            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg">
-                                <span className="text-lg font-bold">
-                                    🏏 {innings === 1 ? state.team1?.replace('_', ' ') : state.team2?.replace('_', ' ')}
-                                </span>
-                            </div>
-                            <div className="text-3xl font-bold text-gray-800">
-                                {score}<span className="text-red-500">/{wickets}</span>
-                            </div>
-                            <div className="text-sm text-gray-600 font-semibold">
-                                ⏰ Over: <span className="text-blue-600">{currentOver}.{ballInOver}</span>
-                            </div>
-                        </div>
-                        
-                        {/* Target Info */}
-                        <div className="flex items-center gap-4">
-                            {innings === 2 && (
-                                <div className="bg-gradient-to-r from-green-100 to-emerald-100 px-4 py-2 rounded-xl border border-green-200">
-                                    <span className="text-sm font-bold text-green-700">🎯 Need: {totalTeamScore + 1 - score >= 0 ? totalTeamScore + 1 - score : 0}</span>
-                                </div>
-                            )}
-                            {innings === 1 && (
-                                <div className="bg-gradient-to-r from-orange-100 to-red-100 px-4 py-2 rounded-xl border border-orange-200">
-                                    <span className="text-sm font-bold text-orange-700">🥇 First Innings</span>
-                                </div>
-                            )}
+                {/* Match Result - Only show when match is over */}
+                {matchOver === 1 && (
+                    <div className="mb-4 text-center">
+                        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-2xl shadow-xl inline-block">
+                            <span className="text-xl font-bold">
+                                🏆 {totalTeamScore > score ? 
+                                    `${state.team1?.replace('_', ' ')} won by ${totalTeamScore - score} runs` : 
+                                    `${state.team2?.replace('_', ' ')} won by ${10 - wickets} wickets`
+                                } 🏆
+                            </span>
                         </div>
                     </div>
-                    
-                    {/* Match Result */}
-                    {matchOver === 1 && (
-                        <div className="mt-3 text-center">
-                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-2 rounded-xl shadow-lg inline-block">
-                                <span className="text-lg font-bold">
-                                    🏆 {totalTeamScore > score ? 
-                                        `${state.team1?.replace('_', ' ')} won by ${totalTeamScore - score} runs` : 
-                                        `${state.team2?.replace('_', ' ')} won by ${10 - wickets} wickets`
-                                    } 🏆
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                )}
                 
                 {/* Main Game Area - Side by Side */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-200px)]">
                     
                     {/* Left: Dice & Controls */}
-                    <div className="lg:col-span-4 flex flex-col">
-                        
-                        {/* Dice Area */}
-                        <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 p-6 mb-4 flex-1 flex flex-col justify-center items-center">
-                            <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-4 rounded-full shadow-2xl border-4 border-white mb-4">
-                                {wickets !== 10 && matchOver === 0 ? (
-                                    <Dice
-                                        onRoll={(value) => scoring(value)}
-                                        size={100}
-                                        sound={'/audio.mp3'}
-                                        faceBg={'White'}
-                                        faces={dice_face}
-                                        rollingTime={150}
-                                        triggers={isProcessing ? [] : ['click', 'a', 'Enter']}
-                                    />
-                                ) : (
-                                    <div className="w-24 h-24 bg-gray-200 rounded-xl flex items-center justify-center">
-                                        <span className="text-3xl">🏏</span>
-                                    </div>
-                                )}
+                    <div className="lg:col-span-4">
+                        <div className="sticky top-4 flex flex-col">
+                            {/* Dice Area (fixed height to avoid shifting) */}
+                            <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 p-6 mb-4 min-h-[300px] flex flex-col items-center justify-center">
+                                <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-4 rounded-full shadow-2xl border-4 border-white mb-4">
+                                    {wickets !== 10 && matchOver === 0 ? (
+                                        <Dice
+                                            onRoll={(value) => scoring(value)}
+                                            size={100}
+                                            sound={'/audio.mp3'}
+                                            faceBg={'White'}
+                                            faces={dice_face}
+                                            rollingTime={150}
+                                            triggers={isProcessing ? [] : ['click', 'a', 'Enter']}
+                                        />
+                                    ) : (
+                                        <div className="w-24 h-24 bg-gray-200 rounded-xl flex items-center justify-center">
+                                            <span className="text-3xl">🏏</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-lg font-bold text-gray-700">🎲 Roll the Dice!</div>
+                                    <div className="text-sm text-gray-500">Click, Press 'A' or Enter</div>
+                                </div>
                             </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold text-gray-700">🎲 Roll the Dice!</div>
-                                <div className="text-sm text-gray-500">Click, Press 'A' or Enter</div>
-                            </div>
-                        </div>
-                        
-                        {/* Action Buttons */}
-                        <div className="flex flex-col gap-3">
-                            <button
-                                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
-                                onClick={() => afterEffect()}
-                                disabled={innings === 2}
-                            >
-                                🏏 Next Innings
-                            </button>
                             
-                            <Link to={{ pathname: '/summary' }}>
+                            {/* Action Buttons */}
+                            <div className="flex flex-col gap-3">
                                 <button
-                                    disabled={innings === 1}
-                                    className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
-                                    onClick={() => dispatchTeam2()}
+                                    className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
+                                    onClick={() => afterEffect()}
+                                    disabled={innings === 2}
                                 >
-                                    📊 Match Summary
+                                    🏏 Next Innings
                                 </button>
-                            </Link>
+                                
+                                <Link to={{ pathname: '/summary' }}>
+                                    <button
+                                        disabled={innings === 1}
+                                        className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
+                                        onClick={() => dispatchTeam2()}
+                                    >
+                                        📊 Match Summary
+                                    </button>
+                                </Link>
+                            </div>
                         </div>
                     </div>
                     
                     {/* Right: Scorecard */}
                     <div className="lg:col-span-8">
-                        <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 p-6 h-full overflow-auto">
+                        <div className="h-full overflow-auto">
                             
                             {/* Debug info - Commented for cleaner UI */}
                             {/* <div className="text-xs text-gray-400 text-center mb-2">
@@ -435,6 +401,8 @@ function App() {
                                     striker={striker}
                                     firstTeam={playerObj.team1}
                                     secondTeam={playerObj.team2}
+                                    team1Score={totalTeamScore}
+                                    battingTeamName={innings === 1 ? (state.team1 ? state.team1.replace('_', ' ') : 'Team 1') : (state.team2 ? state.team2.replace('_', ' ') : 'Team 2')}
                                     players={innings === 1 ? playerObj.team1 : playerObj.team2}
                                     innings={innings}
                                     currentOver={currentOver}

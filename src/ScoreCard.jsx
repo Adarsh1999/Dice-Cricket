@@ -20,6 +20,7 @@ function ScoreCard({
     ballInOver,
     fallOn,
     playerFell,
+    battingTeamName,
 }) {
     // Helper function to get player name with multiple fallbacks
     const getPlayerName = (id) => {
@@ -64,6 +65,8 @@ function ScoreCard({
         const isOut = status && status[id] === 1;
         const isStriker = id === striker;
         
+        // Fixed striker/batsman logic - reverted to original working state
+        
         if (isOut) {
             return {
                 icon: '❌',
@@ -77,7 +80,7 @@ function ScoreCard({
         if (isStriker) {
             return {
                 icon: '🏏',
-                bgClass: 'from-yellow-400 to-orange-500',
+                bgClass: 'from-amber-600 to-orange-700',
                 textClass: 'text-white',
                 borderClass: 'border-yellow-300',
                 status: 'STRIKER'
@@ -105,47 +108,105 @@ function ScoreCard({
 
     return (
         <div className="w-full max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-t-2xl p-4 shadow-2xl">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-white rounded-full p-2 shadow-lg">
-                            <span className="text-2xl">🏏</span>
+            {/* Beautiful Unified Scorecard Header - Sticky */}
+            <div className="sticky top-0 z-30 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-t-2xl shadow-2xl border-4 border-white/20">
+                
+                {/* Main Score Display */}
+                <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        {/* Team Info */}
+                        <div className="flex items-center gap-4">
+                            <div className="bg-white/20 backdrop-blur rounded-full p-3 shadow-xl">
+                                <span className="text-3xl">🏏</span>
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-black text-white mb-1">
+                                    {innings === 1 ? 'First Innings' : 'Second Innings'}
+                                </h1>
+                                <p className="text-indigo-100 text-lg font-semibold">
+                                    {battingTeamName || (innings === 1 ? 'Team 1' : 'Team 2')} Batting
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-white">
-                                {innings === 1 ? 'First Innings' : 'Second Innings'}
-                            </h2>
-                            <p className="text-indigo-100 font-semibold">
-                                {innings === 1 ? 'Team 1' : 'Team 2'} Batting
-                            </p>
+                        
+                        {/* Live Score Badge with compact overs pill */}
+                        <div className="bg-white/30 backdrop-blur rounded-2xl px-6 py-3 shadow-xl">
+                            <div className="text-center">
+                                <div className="text-white/80 text-sm font-bold mb-1">LIVE SCORE</div>
+                                <div className="text-4xl font-black text-white flex items-center gap-3 justify-center">
+                                    <span>
+                                        {scorelist?.reduce((sum, score) => sum + score, 0) || 0}
+                                        <span className="text-white">/{status?.filter(s => s === 1).length || 0}</span>
+                                    </span>
+                                    <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded-full border border-white/30">
+                                        ⏰ {currentOver || 0}.{ballInOver || 0}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    {/* Live Match Stats */}
-                    <div className="flex gap-4">
-                        <div className="bg-white/20 backdrop-blur rounded-xl p-3 text-center">
-                            <div className="text-white text-sm font-semibold">OVERS</div>
-                            <div className="text-white text-xl font-bold">
-                                {currentOver || 0}.{ballInOver || 0}
+                    {/* Stats Row */}
+                    <div className="grid grid-cols-3 gap-4">
+                        {/* Left: Target (2nd innings) or Wickets (1st innings) */}
+                        <div className="bg-white/20 backdrop-blur rounded-xl p-4 text-center shadow-lg">
+                            {innings === 2 ? (
+                                <>
+                                    <div className="text-white/80 text-sm font-bold mb-2">🎯 TARGET</div>
+                                    <div className="text-2xl font-black text-white">{(team1Score || 0) + 1}</div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="text-white/80 text-sm font-bold mb-2">⚡ WICKETS</div>
+                                    <div className="text-2xl font-black text-white">{status?.filter(s => s === 1).length || 0}/10</div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Middle: Partnership */}
+                        <div className="bg-white/20 backdrop-blur rounded-xl p-4 text-center shadow-lg">
+                            <div className="text-white/80 text-sm font-bold mb-2">🤝 PARTNERSHIP</div>
+                            <div className="text-2xl font-black text-white">
+                                {current && current.length >= 2 ? 
+                                    (scorelist?.[current[0]] || 0) + (scorelist?.[current[1]] || 0) : 0}
                             </div>
                         </div>
-                        <div className="bg-white/20 backdrop-blur rounded-xl p-3 text-center">
-                            <div className="text-white text-sm font-semibold">SCORE</div>
-                            <div className="text-white text-xl font-bold">
-                                {scorelist?.reduce((sum, score) => sum + score, 0) || 0}
-                            </div>
+
+                        {/* Right: Need (2nd innings) or Overs (1st innings) */}
+                        <div className="bg-white/20 backdrop-blur rounded-xl p-4 text-center shadow-lg">
+                            {innings === 2 ? (
+                                <>
+                                    <div className="text-white/80 text-sm font-bold mb-2">🏃 NEED</div>
+                                    <div className="text-2xl font-black text-white">
+                                        {Math.max(0, ((team1Score || 0) + 1) - (scorelist?.reduce((sum, score) => sum + score, 0) || 0))}
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="text-white/80 text-sm font-bold mb-2">⏰ OVERS</div>
+                                    <div className="text-2xl font-black text-white">{currentOver || 0}.{ballInOver || 0}</div>
+                                </>
+                            )}
                         </div>
-                        {/* Compact Partnership Stat */}
-                        {current && current.length >= 2 && (
-                            <div className="bg-white/20 backdrop-blur rounded-xl p-3 text-center">
-                                <div className="text-white text-sm font-semibold">PARTNERSHIP</div>
-                                <div className="text-white text-xl font-bold">
-                                    {getCurrentPartnership()}
-                                </div>
-                            </div>
-                        )}
                     </div>
+                    
+
+                    {/* Current Batsmen */}
+                    {current && current.length >= 2 && (
+                        <div className="mt-4 flex items-center justify-center gap-4">
+                            {current.slice(0, 2).map((playerId, idx) => (
+                                <div key={playerId} className="bg-white/20 backdrop-blur rounded-xl px-4 py-2 shadow-lg flex items-center gap-3">
+                                    <div className={`w-3 h-3 rounded-full ${playerId === striker ? 'bg-yellow-300 animate-pulse' : 'bg-green-300'}`}></div>
+                                    <span className="text-white font-bold">
+                                        {getPlayerName(playerId)}
+                                    </span>
+                                    <span className="text-white/80 text-sm">
+                                        {scorelist?.[playerId] || 0}*
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -153,40 +214,7 @@ function ScoreCard({
             <div className="bg-gradient-to-br from-white to-gray-50 rounded-b-2xl shadow-2xl border-l-4 border-r-4 border-b-4 border-indigo-200">
                 <div className="p-6">
                     
-                    {/* Refined Partnership Card (medium size) */}
-                    {current && current.length >= 2 && (
-                        <div className="mb-5">
-                            <div className="w-full bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200 rounded-2xl p-4 shadow-xl">
-                                <div className="flex items-center gap-4 justify-between flex-wrap">
-                                    {/* Title */}
-                                    <div className="flex items-center gap-2 text-emerald-800">
-                                        <span className="text-xl">🤝</span>
-                                        <span className="text-lg font-bold">Current Partnership</span>
-                                    </div>
-                                    {/* Runs badge */}
-                                    <div className="flex items-center gap-2">
-                                        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg">
-                                            <span className="text-2xl font-black">{getCurrentPartnership()}</span>
-                                        </div>
-                                        <span className="text-emerald-700 font-semibold">runs</span>
-                                    </div>
-                                    {/* Player chips */}
-                                    <div className="flex items-center gap-2">
-                                        {current.slice(0, 2).map((playerId, idx) => (
-                                            <div key={playerId} className="flex items-center gap-2 bg-white text-emerald-800 border border-emerald-200 rounded-full px-3 py-1 shadow">
-                                                <span className="text-sm font-semibold truncate max-w-[140px]">
-                                                    {idx === 0 ? '🟨' : '🟩'} {getPlayerName(playerId)}
-                                                </span>
-                                                <span className="text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full px-2 py-0.5">
-                                                    {scorelist?.[playerId] || 0}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    {/* Partnership details shown in header to avoid duplication */}
 
                     {/* All Players Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -254,81 +282,39 @@ function ScoreCard({
                         })}
                     </div>
 
-                    {/* Team Total Summary */}
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        
-                        {/* Total Score Card */}
-                        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-2xl transform hover:scale-105 transition-all duration-300">
-                            <div className="text-center">
-                                <div className="text-lg font-bold mb-2">📊 TEAM TOTAL</div>
-                                <div className="text-4xl font-black">
-                                    {scorelist?.reduce((sum, score) => sum + score, 0) || 0}
-                                </div>
-                                <div className="text-sm font-semibold opacity-90 mt-1">
-                                    Total Runs Scored
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Wickets Card */}
-                        <div className="bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl p-6 text-white shadow-2xl transform hover:scale-105 transition-all duration-300">
-                            <div className="text-center">
-                                <div className="text-lg font-bold mb-2">⚡ WICKETS</div>
-                                <div className="text-4xl font-black">
-                                    {status?.filter(s => s === 1).length || 0}/10
-                                </div>
-                                <div className="text-sm font-semibold opacity-90 mt-1">
-                                    Players Dismissed
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Overs Card */}
-                        <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-2xl transform hover:scale-105 transition-all duration-300">
-                            <div className="text-center">
-                                <div className="text-lg font-bold mb-2">⏰ OVERS</div>
-                                <div className="text-4xl font-black">
-                                    {currentOver || 0}.{ballInOver || 0}
-                                </div>
-                                <div className="text-sm font-semibold opacity-90 mt-1">
-                                    Overs Bowled
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Removed duplicate Team Total Summary cards - info shown in header */}
 
                     {/* Fall of Wickets - Enhanced */}
                     {playerFell && playerFell.filter(data => data !== '').length > 0 && (
-                        <div className="mt-6 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 rounded-2xl p-6 border-2 border-red-200 shadow-xl">
-                            <div className="text-center mb-6">
+                        <div className="mt-6 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 rounded-2xl p-5 border border-red-200 shadow-xl">
+                            <div className="text-center mb-4">
                                 <h3 className="text-2xl font-bold text-red-800 mb-2">
                                     ⚡ Fall of Wickets
                                 </h3>
-                                <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded-xl shadow-lg inline-block">
+                                <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1.5 rounded-lg shadow inline-block text-sm font-semibold">
                                     <span className="text-lg font-bold">
                                         {playerFell.filter(data => data !== '').length} wickets fallen
                                     </span>
                                 </div>
                             </div>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {playerFell.map((data, id) =>
                                     data !== '' ? (
-                                        <div key={id} className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl p-4 shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-red-300">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <div className="text-lg font-bold">
+                                        <div key={id} className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl p-3 shadow-lg border border-red-300">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <div className="text-sm font-bold truncate">
                                                         💥 {data}
                                                     </div>
-                                                    <div className="text-sm font-semibold opacity-90">
+                                                    <div className="text-[11px] font-semibold opacity-90">
                                                         Wicket #{id + 1}
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-2xl font-black">
+                                                    <div className="text-xl font-black leading-none">
                                                         {fallOn[id]}
                                                     </div>
-                                                    <div className="text-sm font-semibold opacity-90">
+                                                    <div className="text-[11px] font-semibold opacity-90">
                                                         Score
                                                     </div>
                                                 </div>
