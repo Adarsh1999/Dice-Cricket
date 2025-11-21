@@ -107,9 +107,9 @@ function ScoreCard({
     };
 
     return (
-        <div className="w-full max-w-6xl mx-auto">
-            {/* Beautiful Unified Scorecard Header - Sticky */}
-            <div className="sticky top-0 z-30 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-t-2xl shadow-2xl border-4 border-white/20">
+        <div className="w-full max-w-5xl mx-auto">
+            {/* Unified Scorecard Header */}
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-t-2xl shadow-2xl border-4 border-white/20">
                 
                 {/* Main Score Display */}
                 <div className="p-6">
@@ -147,7 +147,7 @@ function ScoreCard({
                     </div>
                     
                     {/* Stats Row */}
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* Left: Target (2nd innings) or Wickets (1st innings) */}
                         <div className="bg-white/20 backdrop-blur rounded-xl p-4 text-center shadow-lg">
                             {innings === 2 ? (
@@ -212,12 +212,12 @@ function ScoreCard({
 
             {/* Players Grid */}
             <div className="bg-gradient-to-br from-white to-gray-50 rounded-b-2xl shadow-2xl border-l-4 border-r-4 border-b-4 border-indigo-200">
-                <div className="p-6">
+                <div className="p-5 sm:p-6">
                     
                     {/* Partnership details shown in header to avoid duplication */}
 
                     {/* All Players Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                         {scorelist && scorelist.map((score, id) => {
                             const playerStatus = getPlayerStatus(id);
                             const playerName = getPlayerName(id);
@@ -225,7 +225,7 @@ function ScoreCard({
                             return (
                                 <div 
                                     key={id}
-                                    className={`relative bg-gradient-to-r ${playerStatus.bgClass} rounded-2xl p-4 shadow-lg border-2 ${playerStatus.borderClass} transform hover:scale-105 transition-all duration-300 hover:shadow-2xl`}
+                                    className={`player-card relative bg-gradient-to-r ${playerStatus.bgClass} rounded-2xl p-4 shadow-lg border-2 ${playerStatus.borderClass} transform hover:scale-105 transition-all duration-300 hover:shadow-2xl`}
                                 >
                                     {/* Player Number Badge */}
                                     <div className="absolute -top-2 -left-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold shadow-lg">

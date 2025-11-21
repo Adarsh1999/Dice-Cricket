@@ -55,7 +55,7 @@ function Past() {
     
     if (loading) {
         return (
-            <div>
+            <div className="max-w-6xl mx-auto px-4 pb-16">
                 <Header />
                 <h2 className="mt-4 mb-6 text-center">Loading...</h2>
             </div>
@@ -83,7 +83,7 @@ function Past() {
             <div>
                 {detail ? (
                     <div>
-                        <div className="sm:w-screen flex flex-col items-center -mb-24">
+                        <div className="flex flex-col items-center mb-8">
                             <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-8 py-3 rounded-2xl shadow-xl border-2 border-red-300 mb-3">
                                 <h1 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
                                     🏏 {detail.team1} 🏏
@@ -96,7 +96,7 @@ function Past() {
                                 </div>
                             </div>
                         </div>
-                        <div className="max-w-4xl mx-auto px-4 mb-8">
+                        <div className="max-w-5xl mx-auto px-2 sm:px-4 mb-10">
                             <ScoreCard
                                 scorelist={detail.team1_data.scorelist}
                                 current={detail.team1_data.current}
@@ -112,40 +112,23 @@ function Past() {
                             />
                         </div>
 
-                        <div className="flex flex-col items-center w-full">
-                            <div className=" flex flex-row">
-                                {' '}
-                                <div className="text-gray-50 p-1 ml-6 mr-3 font-semibold bg-gray-700 rounded-lg">
-                                    Fall of Wickets:{' '}
-                                </div>
-                                {detail.team1_data.playerFell.map((data, id) =>
-                                    id <= 5 && data !== '' ? (
-                                        <React.Fragment key={id}>
-                                            <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
-                                            <div className="mr-3 font-semibold">
-                                                {detail.team1_data.fallOn[id]}/{id + 1}
-                                            </div>
-                                        </React.Fragment>
-                                    ) : null,
-                                )}
+                        <div className="flex flex-col items-start w-full max-w-5xl mx-auto px-2 sm:px-4 mb-12">
+                            <div className="text-gray-800 p-2 mb-2 font-semibold bg-gray-100 rounded-lg border border-gray-200">
+                                Fall of Wickets
                             </div>
-                            <div className="flex flex-row mt-3 mb-4 ml-8">
-                                {' '}
-                                <div className="mr-3"> </div>
+                            <div className="flex flex-wrap gap-2">
                                 {detail.team1_data.playerFell.map((data, id) =>
-                                    id > 5 && data !== '' ? (
-                                        <React.Fragment key={id}>
-                                            <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
-                                            <div className="mr-3 font-semibold">
-                                                {detail.team1_data.fallOn[id]}/{id + 1}
-                                            </div>
-                                        </React.Fragment>
+                                    data !== '' ? (
+                                        <div key={id} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 border border-blue-200 text-sm font-semibold">
+                                            <span>{data}</span>
+                                            <span className="text-gray-700">{detail.team1_data.fallOn[id]}/{id + 1}</span>
+                                        </div>
                                     ) : null,
                                 )}
                             </div>
                         </div>
 
-                        <div className="sm:w-screen flex flex-col items-center -mb-24">
+                        <div className="flex flex-col items-center mb-8">
                             <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-3 rounded-2xl shadow-xl border-2 border-blue-300 mb-3">
                                 <h1 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
                                     🏏 {detail.team2} 🏏
@@ -158,7 +141,7 @@ function Past() {
                                 </div>
                             </div>
                         </div>
-                        <div className="max-w-4xl mx-auto px-4 mb-8">
+                        <div className="max-w-5xl mx-auto px-2 sm:px-4 mb-10">
                             <ScoreCard
                                 scorelist={detail.team2_data.scorelist}
                                 current={detail.team2_data.current}
@@ -174,34 +157,17 @@ function Past() {
                                 ballInOver={detail.team2_data.ballInOver}
                             />
                         </div>
-                        <div className="flex flex-col items-center w-full">
-                            <div className=" flex flex-row">
-                                {' '}
-                                <div className="text-gray-50 p-1 ml-6 mr-3 font-semibold bg-gray-700 rounded-lg">
-                                    Fall of Wickets:{' '}
-                                </div>
-                                {detail.team2_data.playerFell.map((data, id) =>
-                                    id <= 5 && data !== '' ? (
-                                        <React.Fragment key={id}>
-                                            <div className=" p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
-                                            <div className="mr-3 font-semibold">
-                                                {detail.team2_data.fallOn[id]}/{id + 1}
-                                            </div>
-                                        </React.Fragment>
-                                    ) : null,
-                                )}
+                        <div className="flex flex-col items-start w-full max-w-5xl mx-auto px-2 sm:px-4 mb-12">
+                            <div className="text-gray-800 p-2 mb-2 font-semibold bg-gray-100 rounded-lg border border-gray-200">
+                                Fall of Wickets
                             </div>
-                            <div className="flex flex-row mt-3 mb-4 ml-8">
-                                {' '}
-                                <div className="mr-3"> </div>
+                            <div className="flex flex-wrap gap-2">
                                 {detail.team2_data.playerFell.map((data, id) =>
-                                    id > 5 && data !== '' ? (
-                                        <React.Fragment key={id}>
-                                            <div className="p-1 mr-3 font-semibold bg-blue-100 rounded-lg">{data}</div>
-                                            <div className="mr-3 font-semibold">
-                                                {detail.team2_data.fallOn[id]}/{id + 1}
-                                            </div>
-                                        </React.Fragment>
+                                    data !== '' ? (
+                                        <div key={id} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 border border-blue-200 text-sm font-semibold">
+                                            <span>{data}</span>
+                                            <span className="text-gray-700">{detail.team2_data.fallOn[id]}/{id + 1}</span>
+                                        </div>
                                     ) : null,
                                 )}
                             </div>

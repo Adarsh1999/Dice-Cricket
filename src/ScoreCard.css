@@ -2,11 +2,16 @@
     margin-top: 40px;
     display: flex;
     justify-content: center;
-    padding: 4rem;
+    padding: 2rem;
 }
 
 .custom{
     font-weight: 1000;
+}
+
+/* Subtle tweaks for tighter cards on history page */
+.player-card{
+    min-height: 150px;
 }
 
 /* .row{
