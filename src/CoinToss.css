@@ -4,15 +4,7 @@ body {
     -webkit-perspective: 800px; /* fallback */
 }
 
-/* Light mode background */
-body:not(.dark) {
-    background: #f7f7f7;
-}
-
-/* Dark mode background overrides */
-.dark body {
-    background: #111827; /* Tailwind gray-900 */
-}
+/* Dark mode is handled by Tailwind on parent containers */
 h1 {
     text-align: center;
 }

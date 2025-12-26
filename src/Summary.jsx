@@ -63,7 +63,7 @@ function Summary() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             <Header />
             
             {/* Celebration Header */}
@@ -104,15 +104,15 @@ function Summary() {
             <div className="max-w-7xl mx-auto px-4 pb-8">
 
                 {/* Team 1 Card */}
-                <div className="bg-gradient-to-r from-white to-gray-50 rounded-3xl shadow-2xl border border-gray-200 mb-8 p-8">
+                <div className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-600 mb-8 p-8">
                     <div className="text-center mb-6">
                         <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-8 py-4 rounded-2xl shadow-xl inline-block mb-4">
                             <h2 className="text-3xl font-bold">🏏 {state.team1?.replace('_', ' ')} 🏏</h2>
                         </div>
-                        <div className="text-5xl font-bold text-gray-800 mb-2">
+                        <div className="text-5xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                             {state.team1_data.score}<span className="text-red-500">/{state.team1_data.wickets || 10}</span>
                         </div>
-                        <div className="text-xl text-gray-600 font-semibold">
+                        <div className="text-xl text-gray-600 dark:text-gray-300 font-semibold">
                             ⏰ Overs: <span className="text-blue-600">{state.team1_data.currentOver || 0}.{state.team1_data.ballInOver || 0}</span>
                         </div>
                     </div>
@@ -183,15 +183,15 @@ function Summary() {
                 </div>
 
                 {/* Team 2 Card */}
-                <div className="bg-gradient-to-r from-white to-gray-50 rounded-3xl shadow-2xl border border-gray-200 mb-8 p-8">
+                <div className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-600 mb-8 p-8">
                     <div className="text-center mb-6">
                         <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-2xl shadow-xl inline-block mb-4">
                             <h2 className="text-3xl font-bold">🏏 {state.team2?.replace('_', ' ')} 🏏</h2>
                         </div>
-                        <div className="text-5xl font-bold text-gray-800 mb-2">
+                        <div className="text-5xl font-bold text-gray-800 dark:text-gray-100 mb-2">
                             {state.team2_data.score}<span className="text-red-500">/{state.team2_data.wickets}</span>
                         </div>
-                        <div className="text-xl text-gray-600 font-semibold">
+                        <div className="text-xl text-gray-600 dark:text-gray-300 font-semibold">
                             ⏰ Overs: <span className="text-blue-600">{state.team2_data.currentOver || 0}.{state.team2_data.ballInOver || 0}</span>
                         </div>
                     </div>

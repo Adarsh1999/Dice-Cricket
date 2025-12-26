@@ -92,16 +92,15 @@ function ScoreCard({
                 icon: '⚡',
                 bgClass: 'from-green-400 to-emerald-500',
                 textClass: 'text-white',
-                borderClass: 'border-green-300',
                 status: 'BATTING'
             };
         }
         
         return {
             icon: '🏃',
-            bgClass: 'from-gray-100 to-gray-200',
-            textClass: 'text-gray-700',
-            borderClass: 'border-gray-200',
+            bgClass: 'from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600',
+            textClass: 'text-gray-700 dark:text-gray-200',
+            borderClass: 'border-gray-200 dark:border-gray-500',
             status: 'WAITING'
         };
     };
@@ -109,7 +108,7 @@ function ScoreCard({
     return (
         <div className="w-full max-w-5xl mx-auto">
             {/* Unified Scorecard Header */}
-            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-t-2xl shadow-2xl border-4 border-white/20">
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-t-2xl shadow-2xl border-4 border-white/20 dark:border-indigo-800">
                 
                 {/* Main Score Display */}
                 <div className="p-6">
@@ -211,7 +210,7 @@ function ScoreCard({
             </div>
 
             {/* Players Grid */}
-            <div className="bg-gradient-to-br from-white to-gray-50 rounded-b-2xl shadow-2xl border-l-4 border-r-4 border-b-4 border-indigo-200">
+            <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-b-2xl shadow-2xl border-l-4 border-r-4 border-b-4 border-indigo-200 dark:border-indigo-800">
                 <div className="p-5 sm:p-6">
                     
                     {/* Partnership details shown in header to avoid duplication */}
@@ -286,9 +285,9 @@ function ScoreCard({
 
                     {/* Fall of Wickets - Enhanced */}
                     {playerFell && playerFell.filter(data => data !== '').length > 0 && (
-                        <div className="mt-6 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 rounded-2xl p-5 border border-red-200 shadow-xl">
+                        <div className="mt-6 bg-gradient-to-r from-red-50 via-orange-50 to-yellow-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 rounded-2xl p-5 border border-red-200 dark:border-red-900 shadow-xl">
                             <div className="text-center mb-4">
-                                <h3 className="text-2xl font-bold text-red-800 mb-2">
+                                <h3 className="text-2xl font-bold text-red-800 dark:text-red-300 mb-2">
                                     ⚡ Fall of Wickets
                                 </h3>
                                 <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1.5 rounded-lg shadow inline-block text-sm font-semibold">
@@ -300,7 +299,7 @@ function ScoreCard({
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {playerFell.map((data, id) =>
                                     data !== '' ? (
-                                        <div key={id} className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl p-3 shadow-lg border border-red-300">
+                                        <div key={id} className="bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-700 dark:to-orange-700 text-white rounded-xl p-3 shadow-lg border border-red-300 dark:border-red-600">
                                             <div className="flex items-center justify-between gap-3">
                                                 <div className="min-w-0">
                                                     <div className="text-sm font-bold truncate">
@@ -328,19 +327,19 @@ function ScoreCard({
 
                     {/* Legacy Total Rows (for backward compatibility) */}
                     {team1Score && innings === 1 && (
-                        <div className="mt-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl p-4 border border-green-200">
+                        <div className="mt-4 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 rounded-xl p-4 border border-green-200 dark:border-green-700">
                             <div className="flex justify-between items-center">
-                                <span className="font-bold text-green-800">🏆 First Innings Total</span>
-                                <span className="text-2xl font-black text-green-800">{team1Score} / 10</span>
+                                <span className="font-bold text-green-800 dark:text-green-300">🏆 First Innings Total</span>
+                                <span className="text-2xl font-black text-green-800 dark:text-green-300">{team1Score} / 10</span>
                             </div>
                         </div>
                     )}
                     
                     {team2Score && innings === 2 && (
-                        <div className="mt-4 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-xl p-4 border border-blue-200">
+                        <div className="mt-4 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
                             <div className="flex justify-between items-center">
-                                <span className="font-bold text-blue-800">🎯 Second Innings Total</span>
-                                <span className="text-2xl font-black text-blue-800">{team2Score} / {team2wic}</span>
+                                <span className="font-bold text-blue-800 dark:text-blue-300">🎯 Second Innings Total</span>
+                                <span className="text-2xl font-black text-blue-800 dark:text-blue-300">{team2Score} / {team2wic}</span>
                             </div>
                         </div>
                     )}

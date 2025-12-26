@@ -5,7 +5,7 @@ import ThemeToggle from './ThemeToggle';
 function Header() {
     return (
         <div className="flex justify-center font-sans">
-            <div className="w-full p-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 shadow-2xl flex items-center justify-between">
+            <div className="w-full p-4 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 dark:from-blue-800 dark:via-purple-900 dark:to-indigo-900 shadow-2xl flex items-center justify-between">
                 <a href="/" className="hover:no-underline text-white transform hover:scale-105 transition-all duration-300">
                     <h1 className="text-3xl font-bold tracking-wide drop-shadow-lg">
                         🎲 The Dice Cricket 🏏

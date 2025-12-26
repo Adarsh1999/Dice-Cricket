@@ -25,14 +25,14 @@ function Landing() {
     };
 
     return (
-        <div className="bg-gradient-to-br from-gray-50 to-white min-h-screen flex flex-col items-center">
+        <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col items-center">
             <div className="max-w-6xl w-full p-8 m-auto">
                 <div className="text-center mb-4">
                     <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 leading-tight">
                         🏏 Welcome to Dice Cricket! 🎲
                     </h1>
                     <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-8"></div>
-                    <p className="text-xl text-gray-600 font-medium">Choose your teams and let the dice decide your destiny!</p>
+                    <p className="text-xl text-gray-600 dark:text-gray-300 font-medium">Choose your teams and let the dice decide your destiny!</p>
                 </div>
             <Teams
                 setTeam1Selected={setTeam1Selected}
@@ -67,10 +67,10 @@ function Landing() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row justify-center gap-5 mt-8">
-                    <div className="bg-gradient-to-r from-red-100 to-pink-100 border-2 border-red-300 hover:border-red-500 px-6 py-3 text-xl font-bold rounded-2xl shadow-lg text-red-700 transform hover:scale-105 transition-all duration-300 cursor-pointer">
+                    <div className="bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/50 dark:to-pink-900/50 border-2 border-red-300 dark:border-red-700 hover:border-red-500 px-6 py-3 text-xl font-bold rounded-2xl shadow-lg text-red-700 dark:text-red-300 transform hover:scale-105 transition-all duration-300 cursor-pointer">
                         🪙 Heads
                     </div>
-                    <div className="bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-300 hover:border-blue-500 px-6 py-3 text-xl font-bold rounded-2xl shadow-lg text-blue-700 transform hover:scale-105 transition-all duration-300 cursor-pointer">
+                    <div className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 border-2 border-blue-300 dark:border-blue-700 hover:border-blue-500 px-6 py-3 text-xl font-bold rounded-2xl shadow-lg text-blue-700 dark:text-blue-300 transform hover:scale-105 transition-all duration-300 cursor-pointer">
                         🪙 Tails
                     </div>
                 </div>
@@ -91,12 +91,12 @@ function Landing() {
                             🏏 {team1Selected.replace('_', ' ')}
                         </div>
                     ) : (
-                        <div className="px-6 py-3 bg-gray-100 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 font-semibold">
+                        <div className="px-6 py-3 bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl text-gray-500 dark:text-gray-400 font-semibold">
                             Select Team 1
                         </div>
                     )}
                     
-                    <div className="flex items-center justify-center text-3xl font-bold text-gray-400">
+                    <div className="flex items-center justify-center text-3xl font-bold text-gray-400 dark:text-gray-500">
                         VS
                     </div>
                     
@@ -116,22 +116,22 @@ function Landing() {
                             🏏 {team2Selected.replace('_', ' ')}
                         </div>
                     ) : (
-                        <div className="px-6 py-3 bg-gray-100 border-2 border-dashed border-gray-300 rounded-2xl text-gray-500 font-semibold">
+                        <div className="px-6 py-3 bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl text-gray-500 dark:text-gray-400 font-semibold">
                             Select Team 2
                         </div>
                     )}
                 </div>
                 <div className="mt-8 flex justify-center">
                     {isTossed ? (
-                        <div className="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-300 px-8 py-6 rounded-2xl shadow-lg text-center max-w-md">
-                            <div className="text-3xl font-bold text-green-700 mb-3">🎉 Toss Result! 🎉</div>
-                            <div className="text-lg font-semibold text-green-800 leading-relaxed">
-                                🏏 <span className="font-bold text-green-900">{team1Selected.replace('_', ' ')}</span> won the toss and chose to bat first!
+                        <div className="bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 border-2 border-green-300 dark:border-green-700 px-8 py-6 rounded-2xl shadow-lg text-center max-w-md">
+                            <div className="text-3xl font-bold text-green-700 dark:text-green-300 mb-3">🎉 Toss Result! 🎉</div>
+                            <div className="text-lg font-semibold text-green-800 dark:text-green-200 leading-relaxed">
+                                🏏 <span className="font-bold text-green-900 dark:text-green-100">{team1Selected.replace('_', ' ')}</span> won the toss and chose to bat first!
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 px-8 py-6 rounded-2xl text-center">
-                            <div className="text-lg font-semibold text-gray-500">
+                        <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 border-2 border-dashed border-gray-300 dark:border-gray-500 px-8 py-6 rounded-2xl text-center">
+                            <div className="text-lg font-semibold text-gray-500 dark:text-gray-300">
                                 🪙 Waiting for coin toss...
                             </div>
                         </div>

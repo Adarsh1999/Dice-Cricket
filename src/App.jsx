@@ -307,7 +307,7 @@ function App() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
             <Header />
             
             {/* Compact Match Interface */}
@@ -334,7 +334,7 @@ function App() {
                     <div className="lg:col-span-4">
                         <div className="sticky top-4 flex flex-col">
                             {/* Dice Area (fixed height to avoid shifting) */}
-                            <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 p-6 mb-4 min-h-[300px] flex flex-col items-center justify-center">
+                            <div className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-600 p-6 mb-4 min-h-[300px] flex flex-col items-center justify-center">
                                 <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-4 rounded-full shadow-2xl border-4 border-white mb-4">
                                     {wickets !== 10 && matchOver === 0 ? (
                                         <Dice
@@ -347,14 +347,14 @@ function App() {
                                             triggers={isProcessing ? [] : ['click', 'a', 'Enter']}
                                         />
                                     ) : (
-                                        <div className="w-24 h-24 bg-gray-200 rounded-xl flex items-center justify-center">
+                                        <div className="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-xl flex items-center justify-center">
                                             <span className="text-3xl">🏏</span>
                                         </div>
                                     )}
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-lg font-bold text-gray-700">🎲 Roll the Dice!</div>
-                                    <div className="text-sm text-gray-500">Click, Press 'A' or Enter</div>
+                                    <div className="text-lg font-bold text-gray-700 dark:text-gray-200">🎲 Roll the Dice!</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">Click, Press 'A' or Enter</div>
                                 </div>
                             </div>
                             
@@ -413,7 +413,7 @@ function App() {
                             ) : (
                                 <div className="text-center py-12">
                                     <div className="text-4xl mb-4">🏏</div>
-                                    <div className="text-xl font-semibold text-gray-600">Loading player data...</div>
+                                    <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">Loading player data...</div>
                                 </div>
                             )}
                             

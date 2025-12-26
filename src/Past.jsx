@@ -55,16 +55,16 @@ function Past() {
     
     if (loading) {
         return (
-            <div className="max-w-6xl mx-auto px-4 pb-16">
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
                 <Header />
-                <h2 className="mt-4 mb-6 text-center">Loading...</h2>
+                <h2 className="mt-4 mb-6 text-center text-gray-700 dark:text-gray-200">Loading...</h2>
             </div>
         );
     }
     
     if (error) {
         return (
-            <div>
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
                 <Header />
                 <h2 className="mt-4 mb-6 text-center text-red-500">{error}</h2>
             </div>
@@ -72,7 +72,7 @@ function Past() {
     }
     
     return (
-        <div>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
             <Header />
             <div className="flex flex-col items-center mt-6 mb-8">
                 <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
@@ -89,10 +89,10 @@ function Past() {
                                     🏏 {detail.team1} 🏏
                                 </h1>
                             </div>
-                            <div className="bg-white px-4 py-2 rounded-lg shadow-md border border-gray-200">
-                                <div className="text-sm font-bold text-gray-700">
-                                    📊 Score: <span className="text-blue-600">{detail.team1_data.score}/{detail.team1_data.wickets}</span> | 
-                                    ⏰ Overs: <span className="text-green-600">{detail.team1_data.currentOver || 0}.{detail.team1_data.ballInOver || 0}</span>
+                            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 px-4 py-2 rounded-lg shadow-md border border-gray-300 dark:border-gray-500">
+                                <div className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                                    📊 Score: <span className="text-blue-600 dark:text-blue-400">{detail.team1_data.score}/{detail.team1_data.wickets}</span> | 
+                                    ⏰ Overs: <span className="text-green-600 dark:text-green-400">{detail.team1_data.currentOver || 0}.{detail.team1_data.ballInOver || 0}</span>
                                 </div>
                             </div>
                         </div>
@@ -113,15 +113,15 @@ function Past() {
                         </div>
 
                         <div className="flex flex-col items-start w-full max-w-5xl mx-auto px-2 sm:px-4 mb-12">
-                            <div className="text-gray-800 p-2 mb-2 font-semibold bg-gray-100 rounded-lg border border-gray-200">
+                            <div className="text-gray-800 dark:text-gray-200 p-2 mb-2 font-semibold bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                                 Fall of Wickets
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {detail.team1_data.playerFell.map((data, id) =>
                                     data !== '' ? (
-                                        <div key={id} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 border border-blue-200 text-sm font-semibold">
+                                        <div key={id} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 text-sm font-semibold">
                                             <span>{data}</span>
-                                            <span className="text-gray-700">{detail.team1_data.fallOn[id]}/{id + 1}</span>
+                                            <span className="text-gray-700 dark:text-gray-300">{detail.team1_data.fallOn[id]}/{id + 1}</span>
                                         </div>
                                     ) : null,
                                 )}
@@ -134,10 +134,10 @@ function Past() {
                                     🏏 {detail.team2} 🏏
                                 </h1>
                             </div>
-                            <div className="bg-white px-4 py-2 rounded-lg shadow-md border border-gray-200">
-                                <div className="text-sm font-bold text-gray-700">
-                                    📊 Score: <span className="text-blue-600">{detail.team2_data.score}/{detail.team2_data.wickets}</span> | 
-                                    ⏰ Overs: <span className="text-green-600">{detail.team2_data.currentOver || 0}.{detail.team2_data.ballInOver || 0}</span>
+                            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 px-4 py-2 rounded-lg shadow-md border border-gray-300 dark:border-gray-500">
+                                <div className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                                    📊 Score: <span className="text-blue-600 dark:text-blue-400">{detail.team2_data.score}/{detail.team2_data.wickets}</span> | 
+                                    ⏰ Overs: <span className="text-green-600 dark:text-green-400">{detail.team2_data.currentOver || 0}.{detail.team2_data.ballInOver || 0}</span>
                                 </div>
                             </div>
                         </div>
@@ -158,15 +158,15 @@ function Past() {
                             />
                         </div>
                         <div className="flex flex-col items-start w-full max-w-5xl mx-auto px-2 sm:px-4 mb-12">
-                            <div className="text-gray-800 p-2 mb-2 font-semibold bg-gray-100 rounded-lg border border-gray-200">
+                            <div className="text-gray-800 dark:text-gray-200 p-2 mb-2 font-semibold bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                                 Fall of Wickets
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {detail.team2_data.playerFell.map((data, id) =>
                                     data !== '' ? (
-                                        <div key={id} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 border border-blue-200 text-sm font-semibold">
+                                        <div key={id} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 text-sm font-semibold">
                                             <span>{data}</span>
-                                            <span className="text-gray-700">{detail.team2_data.fallOn[id]}/{id + 1}</span>
+                                            <span className="text-gray-700 dark:text-gray-300">{detail.team2_data.fallOn[id]}/{id + 1}</span>
                                         </div>
                                     ) : null,
                                 )}
