@@ -21,12 +21,13 @@ function ScoreCard({
     fallOn,
     playerFell,
     battingTeamName,
+    target,
 }) {
     // Helper function to get player name with multiple fallbacks
     const getPlayerName = (id) => {
         let playerName = '';
         
-        if (innings === 1) {
+        if (innings === 1 || innings === 3) {
             playerName = firstTeam?.[id] || players?.[id] || '';
         } else {
             playerName = secondTeam?.[id] || players?.[id] || '';
@@ -39,13 +40,26 @@ function ScoreCard({
         return playerName;
     };
 
+    const inningsLabels = {
+        1: 'First Innings',
+        2: 'Second Innings',
+        3: 'Third Innings',
+        4: 'Fourth Innings',
+    };
+    const inningsLabel = inningsLabels[innings] || 'Innings';
+    const currentScore = scorelist?.reduce((sum, score) => sum + score, 0) || 0;
+    const wicketsLost = (status || []).filter((s) => s === 1).length;
+    const targetScore = typeof target === 'number'
+        ? target
+        : innings === 2 && typeof team1Score === 'number'
+        ? team1Score + 1
+        : null;
+
     // Calculate current partnership value
     const getCurrentPartnership = () => {
         if (!current || current.length < 2 || !fallOn || !scorelist) {
             return 0;
         }
-        
-        const currentScore = scorelist.reduce((sum, score) => sum + score, 0);
         
         // Find the last wicket that fell (highest score in fallOn array that has a value)
         let lastWicketScore = 0;
@@ -120,10 +134,10 @@ function ScoreCard({
                             </div>
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-1">
-                                    {innings === 1 ? 'First Innings' : 'Second Innings'}
+                                    {inningsLabel}
                                 </h1>
                                 <p className="text-indigo-100 text-lg font-semibold">
-                                    {battingTeamName || (innings === 1 ? 'Team 1' : 'Team 2')} Batting
+                                    {battingTeamName || (innings === 1 || innings === 3 ? 'Team 1' : 'Team 2')} Batting
                                 </p>
                             </div>
                         </div>
@@ -134,8 +148,8 @@ function ScoreCard({
                                 <div className="text-white/80 text-sm font-bold mb-1">LIVE SCORE</div>
                                 <div className="text-4xl font-black text-white flex items-center gap-3 justify-center">
                                     <span>
-                                        {scorelist?.reduce((sum, score) => sum + score, 0) || 0}
-                                        <span className="text-white">/{status?.filter(s => s === 1).length || 0}</span>
+                                        {currentScore}
+                                        <span className="text-white">/{wicketsLost}</span>
                                     </span>
                                     <span className="bg-white/20 text-white text-xs font-bold px-2 py-1 rounded-full border border-white/30">
                                         ⏰ {currentOver || 0}.{ballInOver || 0}
@@ -149,15 +163,15 @@ function ScoreCard({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* Left: Target (2nd innings) or Wickets (1st innings) */}
                         <div className="bg-white/20 backdrop-blur rounded-xl p-4 text-center shadow-lg">
-                            {innings === 2 ? (
+                            {targetScore ? (
                                 <>
                                     <div className="text-white/80 text-sm font-bold mb-2">🎯 TARGET</div>
-                                    <div className="text-2xl font-black text-white">{(team1Score || 0) + 1}</div>
+                                    <div className="text-2xl font-black text-white">{targetScore}</div>
                                 </>
                             ) : (
                                 <>
                                     <div className="text-white/80 text-sm font-bold mb-2">⚡ WICKETS</div>
-                                    <div className="text-2xl font-black text-white">{status?.filter(s => s === 1).length || 0}/10</div>
+                                    <div className="text-2xl font-black text-white">{wicketsLost}/10</div>
                                 </>
                             )}
                         </div>
@@ -173,11 +187,11 @@ function ScoreCard({
 
                         {/* Right: Need (2nd innings) or Overs (1st innings) */}
                         <div className="bg-white/20 backdrop-blur rounded-xl p-4 text-center shadow-lg">
-                            {innings === 2 ? (
+                            {targetScore ? (
                                 <>
                                     <div className="text-white/80 text-sm font-bold mb-2">🏃 NEED</div>
                                     <div className="text-2xl font-black text-white">
-                                        {Math.max(0, ((team1Score || 0) + 1) - (scorelist?.reduce((sum, score) => sum + score, 0) || 0))}
+                                        {Math.max(0, targetScore - currentScore)}
                                     </div>
                                 </>
                             ) : (

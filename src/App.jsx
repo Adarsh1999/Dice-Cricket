@@ -19,6 +19,9 @@ function App() {
     const [players, setPlayers] = useState(Array(11).fill(0));
     const [currentPlayers, setCurrentPlayers] = useState([0, 1]);
     const [totalTeamScore, setTotalTeamScore] = useState(0);
+    const [team2FirstInningsScore, setTeam2FirstInningsScore] = useState(0);
+    const [team1SecondInningsScore, setTeam1SecondInningsScore] = useState(0);
+    const [testTarget, setTestTarget] = useState(null);
     const [innings, setInnings] = useState(1);
     const [playersOut, setPlayersOut] = useState(Array(11).fill(0));
     const [Bool, setBool] = useState(false);
@@ -27,6 +30,9 @@ function App() {
     const [playerObj, setPlayerObj] = useState();
     const [fallOn, setFallOn] = useState(Array(10).fill(''));
     const [playerFell, setPlayerFell] = useState(Array(10).fill(''));
+    const isTestMatch = state.matchType === 'test';
+    const maxInnings = isTestMatch ? 4 : 2;
+    const isTeam1Batting = isTestMatch ? innings === 1 || innings === 3 : innings === 1;
     
     // Over tracking state
     const [currentOver, setCurrentOver] = useState(0);
@@ -64,42 +70,99 @@ function App() {
         }
     }, [state.team1, state.team2]);
 
-    // To refresh after 10 wickets haul
-    const afterEffect = () => {
-        //if logic
-        const setStuff = () => {
+    const buildTeamPayload = (teamKey) => {
+        const teamPlayers = teamKey === 'team1' ? playerObj?.team1 : playerObj?.team2;
+        return {
+            scorelist: players,
+            current: currentPlayers,
+            status: playersOut,
+            striker: striker,
+            players: teamPlayers || [],
+            firstTeam: teamKey === 'team1' ? teamPlayers || [] : [],
+            secondTeam: teamKey === 'team2' ? teamPlayers || [] : [],
+            score: score,
+            wickets: wickets,
+            fallOn: fallOn,
+            playerFell: playerFell,
+            currentOver: currentOver,
+            ballInOver: ballInOver,
+        };
+    };
+
+    const persistInningsData = (teamKey, isSecondInnings) => {
+        const payload = buildTeamPayload(teamKey);
+        if (teamKey === 'team1') {
+            if (isSecondInnings) {
+                dispatch({
+                    type: 'SET_TEAM1_SECOND',
+                    team1_data2: payload,
+                });
+                return;
+            }
             dispatch({
                 type: 'SET_TEAM1',
-                team1_data: {
-                    scorelist: players,
-                    current: currentPlayers,
-                    status: playersOut,
-                    striker: striker,
-                    firstTeam: playerObj.team1,
-                    score: score,
-                    wickets: 10,
-                    fallOn: fallOn,
-                    playerFell: playerFell,
-                    currentOver: currentOver,
-                    ballInOver: ballInOver,
-                },
+                team1_data: payload,
             });
-            setTotalTeamScore(score);
-            setInnings(2);
-            setScore(0);
-            setWickets(0);
-            setPlayersOut(Array(11).fill(0));
-            setFallOn(Array(10).fill(''));
-            setPlayerFell(Array(10).fill(''));
+            return;
+        }
+        if (isSecondInnings) {
+            dispatch({
+                type: 'SET_TEAM2_SECOND',
+                team2_data2: payload,
+            });
+            return;
+        }
+        dispatch({
+            type: 'SET_TEAM2',
+            team2_data: payload,
+        });
+    };
 
-            setPlayers(Array(11).fill(0));
-            setBool(false);
-            setCurrentPlayers([0, 1]);
-            setStriker(0);
-            
-            // Reset over tracking for new innings
-            setCurrentOver(0);
-            setBallInOver(0);
+    const resetInningsState = () => {
+        setScore(0);
+        setWickets(0);
+        setPlayersOut(Array(11).fill(0));
+        setFallOn(Array(10).fill(''));
+        setPlayerFell(Array(10).fill(''));
+        setPlayers(Array(11).fill(0));
+        setBool(false);
+        setCurrentPlayers([0, 1]);
+        setStriker(0);
+        setCurrentOver(0);
+        setBallInOver(0);
+    };
+
+    // To refresh after 10 wickets haul
+    const afterEffect = () => {
+        if (innings >= maxInnings) {
+            return;
+        }
+        const setStuff = () => {
+            const teamKey = isTeam1Batting ? 'team1' : 'team2';
+            const isSecondInnings = isTestMatch && ((teamKey === 'team1' && innings === 3) || (teamKey === 'team2' && innings === 4));
+            persistInningsData(teamKey, isSecondInnings);
+
+            if (innings === 1) {
+                setTotalTeamScore(score);
+                setInnings(2);
+                resetInningsState();
+                return;
+            }
+
+            if (isTestMatch && innings === 2) {
+                setTeam2FirstInningsScore(score);
+                setInnings(3);
+                resetInningsState();
+                return;
+            }
+
+            if (isTestMatch && innings === 3) {
+                setTeam1SecondInningsScore(score);
+                const target = totalTeamScore + score - team2FirstInningsScore + 1;
+                setTestTarget(Math.max(1, target));
+                setInnings(4);
+                resetInningsState();
+            }
         };
         wickets === 10 ? setStuff() : console.log('useeffect for 10 wickets');
     };
@@ -177,34 +240,36 @@ function App() {
     }, [score, isProcessing]); // Add isProcessing as dependency
 
     const dispatchTeam2 = () => {
+        const teamKey = isTeam1Batting ? 'team1' : 'team2';
+        const isSecondInnings = isTestMatch && teamKey === 'team2' && innings === 4;
+        persistInningsData(teamKey, isSecondInnings);
+    };
+
+    const endMatch = (resultText) => {
+        if (matchOver) {
+            return;
+        }
         dispatch({
-            type: 'SET_TEAM2',
-            team2_data: {
-                scorelist: players,
-                current: currentPlayers,
-                status: playersOut,
-                striker: striker,
-                secondTeam: playerObj.team2,
-                score: score,
-                wickets: wickets,
-                fallOn: fallOn,
-                playerFell: playerFell,
-                currentOver: currentOver,
-                ballInOver: ballInOver,
-            },
+            type: 'SET_RESULT',
+            result: resultText,
         });
+        setMatchOver(1);
     };
 
     useEffect(() => {
-        if (innings === 2 && score > totalTeamScore) {
+        const target = isTestMatch
+            ? innings === 4
+                ? testTarget ?? Math.max(1, totalTeamScore + team1SecondInningsScore - team2FirstInningsScore + 1)
+                : null
+            : innings === 2
+            ? totalTeamScore + 1
+            : null;
+
+        if (target && score >= target) {
             console.log('Team 2 won the match ');
-            dispatch({
-                type: 'SET_RESULT',
-                result: `${state.team2} won by ${10 - wickets} wickets`,
-            });
-            setMatchOver(1);
+            endMatch(`${state.team2} won by ${10 - wickets} wickets`);
         }
-    }, [score]);
+    }, [score, innings, totalTeamScore, testTarget, team1SecondInningsScore, team2FirstInningsScore, isTestMatch, wickets, matchOver, state.team2]);
 
     useEffect(() => {
         console.log('player fallen on odd', playerFell, innings);
@@ -219,15 +284,26 @@ function App() {
     // this useeffect is for the fallen wickets and as well as for changing playersout status and also declaring the winner
     useEffect(() => {
         console.log('current fallen wickets', wickets);
-        if (innings === 2 && wickets === 10) {
+        if (matchOver) {
+            return;
+        }
+        const target = isTestMatch
+            ? innings === 4
+                ? testTarget ?? Math.max(1, totalTeamScore + team1SecondInningsScore - team2FirstInningsScore + 1)
+                : null
+            : innings === 2
+            ? totalTeamScore + 1
+            : null;
+        if (!isTestMatch && innings === 2 && wickets === 10) {
             console.log('team 1 won');
-            dispatch({
-                type: 'SET_RESULT',
-                result: `${state.team1} won by ${totalTeamScore - score} runs`,
-            });
-            setMatchOver(1);
+            endMatch(`${state.team1} won by ${Math.max(0, totalTeamScore - score)} runs`);
+        }
+        if (isTestMatch && innings === 4 && wickets === 10 && target) {
+            console.log('team 1 won');
+            endMatch(`${state.team1} won by ${Math.max(0, target - 1 - score)} runs`);
         }
         //most complex use case of usestate but very important refer for future
+        const battingPlayers = isTeam1Batting ? playerObj?.team1 : playerObj?.team2;
         if (Bool && score % 2 === 0) {
             setCurrentPlayers((prevState) => {
                 // next banda kon ayega uska logic generally wicket no. ke baad 1 add
@@ -242,11 +318,7 @@ function App() {
                 });
                 setPlayerFell((prevState) => {
                     const val = prevState.map((item, idx) =>
-                        idx === wickets - 1 && innings === 1
-                            ? playerObj.team1[currentPlayers[0]]
-                            : idx === wickets - 1 && innings === 2
-                            ? playerObj.team2[currentPlayers[0]]
-                            : item,
+                        idx === wickets - 1 ? battingPlayers?.[currentPlayers[0]] ?? item : item,
                     );
                     console.log('player fallen on odd', playerFell);
 
@@ -274,11 +346,7 @@ function App() {
                 });
                 setPlayerFell((prevState) => {
                     const val = prevState.map((item, idx) =>
-                        idx === wickets - 1 && innings === 1
-                            ? playerObj.team1[currentPlayers[1]]
-                            : idx === wickets - 1 && innings === 2
-                            ? playerObj.team2[currentPlayers[1]]
-                            : item,
+                        idx === wickets - 1 ? battingPlayers?.[currentPlayers[1]] ?? item : item,
                     );
 
                     console.log('player fallen on odd', playerFell);
@@ -306,6 +374,52 @@ function App() {
         };
     }, []);
 
+    const targetScore = isTestMatch
+        ? innings === 4
+            ? testTarget ?? Math.max(1, totalTeamScore + team1SecondInningsScore - team2FirstInningsScore + 1)
+            : null
+        : innings === 2
+        ? totalTeamScore + 1
+        : null;
+
+    const battingTeamName = isTeam1Batting
+        ? state.team1
+            ? state.team1.replace('_', ' ')
+            : 'Team 1'
+        : state.team2
+        ? state.team2.replace('_', ' ')
+        : 'Team 2';
+    const battingPlayers = isTeam1Batting ? playerObj?.team1 : playerObj?.team2;
+
+    const leadTrailInfo = (() => {
+        if (!isTestMatch) {
+            return null;
+        }
+        if (innings === 2) {
+            const diff = score - totalTeamScore;
+            return {
+                team: state.team2,
+                label: diff >= 0 ? 'Lead' : 'Trail',
+                runs: Math.abs(diff),
+            };
+        }
+        if (innings === 3) {
+            const diff = totalTeamScore + score - team2FirstInningsScore;
+            return {
+                team: state.team1,
+                label: diff >= 0 ? 'Lead' : 'Trail',
+                runs: Math.abs(diff),
+            };
+        }
+        return null;
+    })();
+
+    const resultText = state.result
+        ? state.result.replace('_', ' ')
+        : totalTeamScore > score
+        ? `${state.team1?.replace('_', ' ')} won by ${totalTeamScore - score} runs`
+        : `${state.team2?.replace('_', ' ')} won by ${10 - wickets} wickets`;
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
             <Header />
@@ -318,10 +432,7 @@ function App() {
                     <div className="mb-4 text-center">
                         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-2xl shadow-xl inline-block">
                             <span className="text-xl font-bold">
-                                🏆 {totalTeamScore > score ? 
-                                    `${state.team1?.replace('_', ' ')} won by ${totalTeamScore - score} runs` : 
-                                    `${state.team2?.replace('_', ' ')} won by ${10 - wickets} wickets`
-                                } 🏆
+                                🏆 {resultText}
                             </span>
                         </div>
                     </div>
@@ -363,14 +474,14 @@ function App() {
                                 <button
                                     className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
                                     onClick={() => afterEffect()}
-                                    disabled={innings === 2}
+                                    disabled={innings === maxInnings || matchOver === 1}
                                 >
                                     🏏 Next Innings
                                 </button>
                                 
                                 <Link to={{ pathname: '/summary' }}>
                                     <button
-                                        disabled={innings === 1}
+                                        disabled={innings !== maxInnings}
                                         className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
                                         onClick={() => dispatchTeam2()}
                                     >
@@ -393,6 +504,16 @@ function App() {
                                 )}
                             </div> */}
                             
+                            {leadTrailInfo && (
+                                <div className="mb-3 text-center">
+                                    <div className="inline-flex items-center gap-2 bg-white/80 dark:bg-gray-700/80 text-gray-800 dark:text-gray-100 px-4 py-2 rounded-xl shadow border border-gray-200 dark:border-gray-600">
+                                        <span className="font-bold">
+                                            {(leadTrailInfo.team ? leadTrailInfo.team.replace('_', ' ') : 'Team')} {leadTrailInfo.label} by {leadTrailInfo.runs}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
                             {playerObj ? (
                                 <ScoreCard
                                     scorelist={players}
@@ -401,14 +522,15 @@ function App() {
                                     striker={striker}
                                     firstTeam={playerObj.team1}
                                     secondTeam={playerObj.team2}
-                                    team1Score={totalTeamScore}
-                                    battingTeamName={innings === 1 ? (state.team1 ? state.team1.replace('_', ' ') : 'Team 1') : (state.team2 ? state.team2.replace('_', ' ') : 'Team 2')}
-                                    players={innings === 1 ? playerObj.team1 : playerObj.team2}
+                                    team1Score={isTestMatch ? null : totalTeamScore}
+                                    battingTeamName={battingTeamName}
+                                    players={battingPlayers}
                                     innings={innings}
                                     currentOver={currentOver}
                                     ballInOver={ballInOver}
                                     fallOn={fallOn}
                                     playerFell={playerFell}
+                                    target={targetScore}
                                 />
                             ) : (
                                 <div className="text-center py-12">

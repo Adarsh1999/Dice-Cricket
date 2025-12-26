@@ -78,7 +78,9 @@ function MatchHistory() {
                                         <div className="p-3 rounded-xl border bg-red-900 border-red-700">
                                             <div className="text-sm font-bold mb-1 text-red-200">{score.team1}</div>
                                             <div className="text-lg font-bold text-white">
-                                                {score.team1_data?.score || 0}/{score.team1_data?.wickets || 0}
+                                                {score.matchType === 'test'
+                                                    ? (score.team1_data?.score || 0) + (score.team1_data2?.score || 0)
+                                                    : `${score.team1_data?.score || 0}/${score.team1_data?.wickets || 0}`}
                                             </div>
                                             <div className="text-xs text-red-300">
                                                 ⏰ {score.team1_data?.currentOver || 0}.{score.team1_data?.ballInOver || 0} overs
@@ -88,7 +90,9 @@ function MatchHistory() {
                                         <div className="p-3 rounded-xl border bg-blue-900 border-blue-700">
                                             <div className="text-sm font-bold mb-1 text-blue-200">{score.team2}</div>
                                             <div className="text-lg font-bold text-white">
-                                                {score.team2_data?.score || 0}/{score.team2_data?.wickets || 0}
+                                                {score.matchType === 'test'
+                                                    ? (score.team2_data?.score || 0) + (score.team2_data2?.score || 0)
+                                                    : `${score.team2_data?.score || 0}/${score.team2_data?.wickets || 0}`}
                                             </div>
                                             <div className="text-xs text-blue-300">
                                                 ⏰ {score.team2_data?.currentOver || 0}.{score.team2_data?.ballInOver || 0} overs

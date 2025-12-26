@@ -12,6 +12,7 @@ function Landing() {
     const [team1Selected, setTeam1Selected] = useState('');
     const [times, setTimes] = useState(1);
     const [team2Selected, setTeam2Selected] = useState('');
+    const [matchType, setMatchType] = useState('oneday');
 
     const [state, dispatch] = useStateValue();
     const [isTossed, setIsTossed] = useState(false);
@@ -21,6 +22,10 @@ function Landing() {
             type: 'SET_TEAM',
             team1: team1Selected,
             team2: team2Selected,
+        });
+        dispatch({
+            type: 'SET_MATCH_TYPE',
+            matchType: matchType,
         });
     };
 
@@ -33,6 +38,35 @@ function Landing() {
                     </h1>
                     <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-8"></div>
                     <p className="text-xl text-gray-600 dark:text-gray-300 font-medium">Choose your teams and let the dice decide your destiny!</p>
+                </div>
+                <div className="flex flex-col items-center mb-8">
+                    <div className="text-lg font-semibold text-gray-700 dark:text-gray-200">Match Format</div>
+                    <div className="flex flex-wrap justify-center gap-4 mt-4">
+                        <button
+                            type="button"
+                            onClick={() => setMatchType('oneday')}
+                            className={cx(
+                                'px-6 py-3 rounded-2xl text-lg font-bold border-2 shadow-lg transform hover:scale-105 transition-all duration-300',
+                                matchType === 'oneday'
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border-green-300'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600',
+                            )}
+                        >
+                            One Day
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setMatchType('test')}
+                            className={cx(
+                                'px-6 py-3 rounded-2xl text-lg font-bold border-2 shadow-lg transform hover:scale-105 transition-all duration-300',
+                                matchType === 'test'
+                                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-blue-300'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600',
+                            )}
+                        >
+                            Test
+                        </button>
+                    </div>
                 </div>
             <Teams
                 setTeam1Selected={setTeam1Selected}

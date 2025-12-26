@@ -52,6 +52,19 @@ function Past() {
     useEffect(() => {
         getMatch();
     }, [id]); // Added id as dependency
+
+    const isTestMatch = detail?.matchType === 'test' || Boolean(detail?.team1_data2?.scorelist?.length);
+    const testTarget = isTestMatch
+        ? Math.max(1, (detail?.team1_data?.score || 0) + (detail?.team1_data2?.score || 0) - (detail?.team2_data?.score || 0) + 1)
+        : null;
+    const testInnings = isTestMatch
+        ? [
+            { id: 'team1-1', teamName: detail?.team1, data: detail?.team1_data, innings: 1 },
+            { id: 'team2-1', teamName: detail?.team2, data: detail?.team2_data, innings: 2 },
+            { id: 'team1-2', teamName: detail?.team1, data: detail?.team1_data2, innings: 3 },
+            { id: 'team2-2', teamName: detail?.team2, data: detail?.team2_data2, innings: 4 },
+        ]
+        : [];
     
     if (loading) {
         return (
@@ -82,6 +95,48 @@ function Past() {
             </div>
             <div>
                 {detail ? (
+                    isTestMatch ? (
+                        <div>
+                            <div className="max-w-5xl mx-auto px-2 sm:px-4 mb-10">
+                                {testInnings.map((inning) => {
+                                    const data = inning.data || {};
+                                    const scorelist = data.scorelist || [];
+                                    const current = data.current || [];
+                                    const status = data.status || [];
+                                    const fallOn = data.fallOn || [];
+                                    const playerFell = data.playerFell || [];
+                                    const playerList = data.players || data.firstTeam || data.secondTeam || [];
+                                    return (
+                                        <div key={inning.id} className="mb-10">
+                                            <ScoreCard
+                                                scorelist={scorelist}
+                                                current={current}
+                                                status={status}
+                                                striker={data.striker}
+                                                firstTeam={data.firstTeam}
+                                                secondTeam={data.secondTeam}
+                                                players={playerList}
+                                                innings={inning.innings}
+                                                battingTeamName={inning.teamName ? inning.teamName.replace('_', ' ') : 'Team'}
+                                                currentOver={data.currentOver}
+                                                ballInOver={data.ballInOver}
+                                                fallOn={fallOn}
+                                                playerFell={playerFell}
+                                                target={inning.innings === 4 ? testTarget : null}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <div className="flex flex-col items-center mt-8">
+                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl border-2 border-green-300 transform hover:scale-105 transition-all duration-300">
+                                    <h2 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
+                                        🏆 {detail.result}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
                     <div>
                         <div className="flex flex-col items-center mb-8">
                             <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-8 py-3 rounded-2xl shadow-xl border-2 border-red-300 mb-3">
@@ -150,6 +205,7 @@ function Past() {
                                 firstTeam={detail.team2_data.firstTeam}
                                 secondTeam={detail.team2_data.secondTeam}
                                 players={detail.team2_data.players}
+                                team1Score={detail.team1_data.score}
                                 innings={2}
                                 team2Score={detail.team2_data.score}
                                 team2wic={detail.team2_data.wickets}
@@ -181,6 +237,7 @@ function Past() {
                             </div>
                         </div>
                     </div>
+                    )
                 ) : (
                     <h1 className=" w-full h-full m-12 text-center">No match details found</h1>
                 )}

@@ -4,6 +4,7 @@ import { useStateValue } from './StateProvider';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Table from 'react-bootstrap/Table';
 import Header from './Header';
+import ScoreCard from './ScoreCard';
 import axios from './axios';
 import Button from 'react-bootstrap/Button';
 import { Link } from 'react-router-dom';
@@ -12,6 +13,33 @@ function Summary() {
     const [state, dispatch] = useStateValue();
     const [saving, setSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState(null);
+    const isTestMatch = state.matchType === 'test';
+
+    const normalizeTeamData = (teamData, teamKey) => {
+        const safeData = teamData || {};
+        const fallbackPlayers = safeData.players || safeData.firstTeam || safeData.secondTeam || [];
+        return {
+            ...safeData,
+            players: safeData.players || fallbackPlayers,
+            firstTeam: teamKey === 'team1' ? (safeData.firstTeam || fallbackPlayers) : (safeData.firstTeam || []),
+            secondTeam: teamKey === 'team2' ? (safeData.secondTeam || fallbackPlayers) : (safeData.secondTeam || []),
+            currentOver: safeData.currentOver || 0,
+            ballInOver: safeData.ballInOver || 0,
+        };
+    };
+
+    const testTarget = isTestMatch
+        ? Math.max(1, (state.team1_data?.score || 0) + (state.team1_data2?.score || 0) - (state.team2_data?.score || 0) + 1)
+        : null;
+
+    const testInnings = isTestMatch
+        ? [
+            { id: 'team1-1', teamName: state.team1, data: state.team1_data, innings: 1 },
+            { id: 'team2-1', teamName: state.team2, data: state.team2_data, innings: 2 },
+            { id: 'team1-2', teamName: state.team1, data: state.team1_data2, innings: 3 },
+            { id: 'team2-2', teamName: state.team2, data: state.team2_data2, innings: 4 },
+        ]
+        : [];
 
     console.log(state);
 
@@ -23,26 +51,11 @@ function Summary() {
             // Transform data to match backend schema
             const gameData = {
                 ...state,
-                team1_data: {
-                    ...state.team1_data,
-                    // Ensure all player name formats are available
-                    players: state.team1_data.firstTeam || state.team1_data.players || [],
-                    firstTeam: state.team1_data.firstTeam || state.team1_data.players || [],
-                    secondTeam: state.team1_data.secondTeam || [],
-                    // Add over data with defaults for backward compatibility
-                    currentOver: state.team1_data.currentOver || 0,
-                    ballInOver: state.team1_data.ballInOver || 0
-                },
-                team2_data: {
-                    ...state.team2_data,
-                    // Ensure all player name formats are available
-                    players: state.team2_data.secondTeam || state.team2_data.players || [],
-                    firstTeam: state.team2_data.firstTeam || [],
-                    secondTeam: state.team2_data.secondTeam || state.team2_data.players || [],
-                    // Add over data with defaults for backward compatibility
-                    currentOver: state.team2_data.currentOver || 0,
-                    ballInOver: state.team2_data.ballInOver || 0
-                }
+                matchType: state.matchType || 'oneday',
+                team1_data: normalizeTeamData(state.team1_data, 'team1'),
+                team2_data: normalizeTeamData(state.team2_data, 'team2'),
+                team1_data2: normalizeTeamData(state.team1_data2, 'team1'),
+                team2_data2: normalizeTeamData(state.team2_data2, 'team2'),
             };
 
             console.log('Saving game data:', gameData);
@@ -103,6 +116,40 @@ function Summary() {
             {/* Main Content Container */}
             <div className="max-w-7xl mx-auto px-4 pb-8">
 
+                {isTestMatch ? (
+                    <div className="space-y-8">
+                        {testInnings.map((inning) => {
+                            const data = inning.data || {};
+                            const scorelist = data.scorelist || [];
+                            const current = data.current || [];
+                            const status = data.status || [];
+                            const fallOn = data.fallOn || [];
+                            const playerFell = data.playerFell || [];
+                            const playerList = data.players || data.firstTeam || data.secondTeam || [];
+                            return (
+                                <div key={inning.id} className="mb-8">
+                                    <ScoreCard
+                                        scorelist={scorelist}
+                                        current={current}
+                                        status={status}
+                                        striker={data.striker}
+                                        firstTeam={data.firstTeam}
+                                        secondTeam={data.secondTeam}
+                                        players={playerList}
+                                        innings={inning.innings}
+                                        battingTeamName={inning.teamName ? inning.teamName.replace('_', ' ') : 'Team'}
+                                        currentOver={data.currentOver}
+                                        ballInOver={data.ballInOver}
+                                        fallOn={fallOn}
+                                        playerFell={playerFell}
+                                        target={inning.innings === 4 ? testTarget : null}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <>
                 {/* Team 1 Card */}
                 <div className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-600 mb-8 p-8">
                     <div className="text-center mb-6">
@@ -260,7 +307,9 @@ function Summary() {
                         </div>
                     )}
                 </div>
-                
+                    </>
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-center gap-8 mt-12">
                     <button 

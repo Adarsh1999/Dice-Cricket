@@ -3,6 +3,9 @@ export const initialState = {
     team2: null,
     team1_data: {},
     team2_data: {},
+    team1_data2: {},
+    team2_data2: {},
+    matchType: 'oneday',
     result: null,
     timestamp: null,
 };
@@ -18,17 +21,32 @@ const reducer = (state, action) => {
                 team1: action.team1,
                 team2: action.team2,
             };
+        case 'SET_MATCH_TYPE':
+            return {
+                ...state,
+                matchType: action.matchType,
+            };
         case 'SET_TEAM1':
             return {
                 ...state,
 
                 team1_data: action.team1_data,
             };
+        case 'SET_TEAM1_SECOND':
+            return {
+                ...state,
+                team1_data2: action.team1_data2,
+            };
         case 'SET_TEAM2':
             return {
                 ...state,
 
                 team2_data: action.team2_data,
+            };
+        case 'SET_TEAM2_SECOND':
+            return {
+                ...state,
+                team2_data2: action.team2_data2,
             };
         case 'SET_RESULT':
             return {
