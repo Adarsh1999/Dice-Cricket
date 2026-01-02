@@ -31,13 +31,13 @@ function Landing() {
 
     return (
         <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col items-center">
-            <div className="max-w-6xl w-full p-8 m-auto">
+            <div className="max-w-6xl w-full p-4 sm:p-6 md:p-8 m-auto">
                 <div className="text-center mb-4">
-                    <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6 leading-tight">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4 sm:mb-6 leading-tight">
                         🏏 Welcome to Dice Cricket! 🎲
                     </h1>
                     <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-8"></div>
-                    <p className="text-xl text-gray-600 dark:text-gray-300 font-medium">Choose your teams and let the dice decide your destiny!</p>
+                    <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 font-medium">Choose your teams and let the dice decide your destiny!</p>
                 </div>
                 <div className="flex flex-col items-center mb-8">
                     <div className="text-lg font-semibold text-gray-700 dark:text-gray-200">Match Format</div>

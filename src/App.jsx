@@ -425,7 +425,7 @@ function App() {
             <Header />
             
             {/* Compact Match Interface */}
-            <div className="max-w-7xl mx-auto px-4 py-2">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
                 
                 {/* Match Result - Only show when match is over */}
                 {matchOver === 1 && (
@@ -439,13 +439,13 @@ function App() {
                 )}
                 
                 {/* Main Game Area - Side by Side */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-200px)]">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 min-h-[calc(100vh-200px)] lg:h-[calc(100vh-200px)]">
                     
                     {/* Left: Dice & Controls */}
                     <div className="lg:col-span-4">
                         <div className="sticky top-4 flex flex-col">
                             {/* Dice Area (fixed height to avoid shifting) */}
-                            <div className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-600 p-6 mb-4 min-h-[300px] flex flex-col items-center justify-center">
+                            <div className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-600 p-4 sm:p-6 mb-4 min-h-[250px] sm:min-h-[300px] flex flex-col items-center justify-center">
                                 <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-4 rounded-full shadow-2xl border-4 border-white mb-4">
                                     {wickets !== 10 && matchOver === 0 ? (
                                         <Dice
@@ -464,7 +464,7 @@ function App() {
                                     )}
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-lg font-bold text-gray-700 dark:text-gray-200">🎲 Roll the Dice!</div>
+                                    <div className="text-base sm:text-lg font-bold text-gray-700 dark:text-gray-200">🎲 Roll the Dice!</div>
                                     <div className="text-sm text-gray-500 dark:text-gray-400">Click, Press 'A' or Enter</div>
                                 </div>
                             </div>

@@ -88,7 +88,7 @@ function Past() {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
             <Header />
             <div className="flex flex-col items-center mt-6 mb-8">
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
                     📊 Match History 📊
                 </h2>
                 <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
@@ -129,7 +129,7 @@ function Past() {
                                 })}
                             </div>
                             <div className="flex flex-col items-center mt-8">
-                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl border-2 border-green-300 transform hover:scale-105 transition-all duration-300">
+                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl border-2 border-green-300 transform hover:scale-105 transition-all duration-300">
                                     <h2 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
                                         🏆 {detail.result}
                                     </h2>
@@ -139,13 +139,13 @@ function Past() {
                     ) : (
                     <div>
                         <div className="flex flex-col items-center mb-8">
-                            <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-8 py-3 rounded-2xl shadow-xl border-2 border-red-300 mb-3">
-                                <h1 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
+                            <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl border-2 border-red-300 mb-3">
+                                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-center tracking-wide drop-shadow-lg">
                                     🏏 {detail.team1} 🏏
                                 </h1>
                             </div>
-                            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 px-4 py-2 rounded-lg shadow-md border border-gray-300 dark:border-gray-500">
-                                <div className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 px-3 sm:px-4 py-2 rounded-lg shadow-md border border-gray-300 dark:border-gray-500">
+                                <div className="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200">
                                     📊 Score: <span className="text-blue-600 dark:text-blue-400">{detail.team1_data.score}/{detail.team1_data.wickets}</span> | 
                                     ⏰ Overs: <span className="text-green-600 dark:text-green-400">{detail.team1_data.currentOver || 0}.{detail.team1_data.ballInOver || 0}</span>
                                 </div>
@@ -184,13 +184,13 @@ function Past() {
                         </div>
 
                         <div className="flex flex-col items-center mb-8">
-                            <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-3 rounded-2xl shadow-xl border-2 border-blue-300 mb-3">
-                                <h1 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
+                            <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl border-2 border-blue-300 mb-3">
+                                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-center tracking-wide drop-shadow-lg">
                                     🏏 {detail.team2} 🏏
                                 </h1>
                             </div>
-                            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 px-4 py-2 rounded-lg shadow-md border border-gray-300 dark:border-gray-500">
-                                <div className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 px-3 sm:px-4 py-2 rounded-lg shadow-md border border-gray-300 dark:border-gray-500">
+                                <div className="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200">
                                     📊 Score: <span className="text-blue-600 dark:text-blue-400">{detail.team2_data.score}/{detail.team2_data.wickets}</span> | 
                                     ⏰ Overs: <span className="text-green-600 dark:text-green-400">{detail.team2_data.currentOver || 0}.{detail.team2_data.ballInOver || 0}</span>
                                 </div>
@@ -230,8 +230,8 @@ function Past() {
                         </div>
 
                         <div className="flex flex-col items-center mt-8">
-                            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl border-2 border-green-300 transform hover:scale-105 transition-all duration-300">
-                                <h2 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
+                            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl border-2 border-green-300 transform hover:scale-105 transition-all duration-300">
+                                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center tracking-wide drop-shadow-lg">
                                     🏆 {detail.result} 🏆
                                 </h2>
                             </div>
