@@ -8,6 +8,110 @@ function MatchHistory() {
     const [loading, setLoading] = useState(true); // State to handle loading
     const [error, setError] = useState(null); // State to handle errors
 
+    const formatTeamName = (teamName) => teamName?.replaceAll('_', ' ') || 'Team';
+
+    const renderMatchCard = (score) => {
+        const isTest = score.matchType === 'test';
+
+        return (
+            <Link key={score._id} to={`/history/${score._id}`}>
+                <div className="flex flex-col items-center">
+                    <div
+                        className={`w-11/12 sm:w-4/5 md:w-3/4 mx-auto my-3 sm:m-4 font-semibold text-center shadow-xl p-4 sm:p-6 rounded-xl sm:rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 ${isTest ? 'bg-gray-900 border-amber-600' : 'bg-gray-800 border-gray-700'}`}
+                    >
+                        {isTest && (
+                            <div className="flex justify-center mb-2">
+                                <span className="bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                                    Test Match
+                                </span>
+                            </div>
+                        )}
+
+                        <div className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 text-white">
+                            {formatTeamName(score.team1)} vs {formatTeamName(score.team2)}
+                        </div>
+
+                        {isTest ? (
+                            <div className="space-y-2 mb-3 sm:mb-4">
+                                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                                    <div className="p-2 rounded-lg border bg-red-900/80 border-red-700">
+                                        <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide mb-0.5">1st Innings</div>
+                                        <div className="text-xs sm:text-sm font-bold text-red-200 truncate">{formatTeamName(score.team1)}</div>
+                                        <div className="text-sm sm:text-base font-bold text-white">
+                                            {score.team1_data?.score || 0}/{score.team1_data?.wickets || 0}
+                                        </div>
+                                    </div>
+                                    <div className="p-2 rounded-lg border bg-blue-900/80 border-blue-700">
+                                        <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide mb-0.5">2nd Innings</div>
+                                        <div className="text-xs sm:text-sm font-bold text-blue-200 truncate">{formatTeamName(score.team2)}</div>
+                                        <div className="text-sm sm:text-base font-bold text-white">
+                                            {score.team2_data?.score || 0}/{score.team2_data?.wickets || 0}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                                    <div className="p-2 rounded-lg border bg-red-800/70 border-red-600">
+                                        <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide mb-0.5">3rd Innings</div>
+                                        <div className="text-xs sm:text-sm font-bold text-red-200 truncate">{formatTeamName(score.team1)}</div>
+                                        <div className="text-sm sm:text-base font-bold text-white">
+                                            {score.team1_data2?.score || 0}/{score.team1_data2?.wickets || 0}
+                                        </div>
+                                    </div>
+                                    <div className="p-2 rounded-lg border bg-blue-800/70 border-blue-600">
+                                        <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide mb-0.5">4th Innings</div>
+                                        <div className="text-xs sm:text-sm font-bold text-blue-200 truncate">{formatTeamName(score.team2)}</div>
+                                        <div className="text-sm sm:text-base font-bold text-white">
+                                            {score.team2_data2?.score || 0}/{score.team2_data2?.wickets || 0}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1 border-t border-gray-600">
+                                    <div className="text-center">
+                                        <span className="text-[10px] sm:text-xs text-gray-400 font-semibold">Total: </span>
+                                        <span className="text-sm sm:text-base font-extrabold text-white">
+                                            {(score.team1_data?.score || 0) + (score.team1_data2?.score || 0)}
+                                        </span>
+                                    </div>
+                                    <div className="text-center">
+                                        <span className="text-[10px] sm:text-xs text-gray-400 font-semibold">Total: </span>
+                                        <span className="text-sm sm:text-base font-extrabold text-white">
+                                            {(score.team2_data?.score || 0) + (score.team2_data2?.score || 0)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
+                                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl border bg-red-900 border-red-700">
+                                    <div className="text-xs sm:text-sm font-bold mb-1 text-red-200 truncate">{formatTeamName(score.team1)}</div>
+                                    <div className="text-base sm:text-lg font-bold text-white">
+                                        {score.team1_data?.score || 0}/{score.team1_data?.wickets || 0}
+                                    </div>
+                                    <div className="text-xs text-red-300">
+                                        {score.team1_data?.currentOver || 0}.{score.team1_data?.ballInOver || 0} overs
+                                    </div>
+                                </div>
+                                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl border bg-blue-900 border-blue-700">
+                                    <div className="text-xs sm:text-sm font-bold mb-1 text-blue-200 truncate">{formatTeamName(score.team2)}</div>
+                                    <div className="text-base sm:text-lg font-bold text-white">
+                                        {score.team2_data?.score || 0}/{score.team2_data?.wickets || 0}
+                                    </div>
+                                    <div className="text-xs text-blue-300">
+                                        {score.team2_data?.currentOver || 0}.{score.team2_data?.ballInOver || 0} overs
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                            {score.result}
+                        </div>
+                    </div>
+                </div>
+            </Link>
+        );
+    };
+
     useEffect(() => {
         const getMatches = async () => {
             try {
@@ -62,116 +166,7 @@ function MatchHistory() {
                 <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base md:text-lg font-medium">Relive the greatest cricket moments</p>
             </div>
             <div>
-                {matches.length > 0 ? (
-                    matches.map((score) => {
-                        const isTest = score.matchType === 'test';
-                        return (
-                        <Link
-                            key={score._id}
-                            to={`/history/${score._id}`}
-                        >
-                            <div className="flex flex-col items-center">
-                                <div className={`w-11/12 sm:w-4/5 md:w-3/4 mx-auto my-3 sm:m-4 font-semibold text-center shadow-xl p-4 sm:p-6 rounded-xl sm:rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 ${isTest ? 'bg-gray-900 border-amber-600' : 'bg-gray-800 border-gray-700'}`}>
-                                    
-                                    {/* Test Match Badge */}
-                                    {isTest && (
-                                        <div className="flex justify-center mb-2">
-                                            <span className="bg-gradient-to-r from-amber-500 to-yellow-500 text-gray-900 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
-                                                🏟️ Test Match
-                                            </span>
-                                        </div>
-                                    )}
-
-                                    <div className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 text-white">
-                                        🏏 {score.team1} vs {score.team2} 🏏
-                                    </div>
-                                    
-                                    {isTest ? (
-                                        /* Test match: show all 4 innings */
-                                        <div className="space-y-2 mb-3 sm:mb-4">
-                                            {/* 1st Innings */}
-                                            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                                                <div className="p-2 rounded-lg border bg-red-900/80 border-red-700">
-                                                    <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide mb-0.5">1st Innings</div>
-                                                    <div className="text-xs sm:text-sm font-bold text-red-200 truncate">{score.team1}</div>
-                                                    <div className="text-sm sm:text-base font-bold text-white">
-                                                        {score.team1_data?.score || 0}/{score.team1_data?.wickets || 0}
-                                                    </div>
-                                                </div>
-                                                <div className="p-2 rounded-lg border bg-blue-900/80 border-blue-700">
-                                                    <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide mb-0.5">2nd Innings</div>
-                                                    <div className="text-xs sm:text-sm font-bold text-blue-200 truncate">{score.team2}</div>
-                                                    <div className="text-sm sm:text-base font-bold text-white">
-                                                        {score.team2_data?.score || 0}/{score.team2_data?.wickets || 0}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {/* 2nd Innings */}
-                                            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                                                <div className="p-2 rounded-lg border bg-red-800/70 border-red-600">
-                                                    <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide mb-0.5">3rd Innings</div>
-                                                    <div className="text-xs sm:text-sm font-bold text-red-200 truncate">{score.team1}</div>
-                                                    <div className="text-sm sm:text-base font-bold text-white">
-                                                        {score.team1_data2?.score || 0}/{score.team1_data2?.wickets || 0}
-                                                    </div>
-                                                </div>
-                                                <div className="p-2 rounded-lg border bg-blue-800/70 border-blue-600">
-                                                    <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide mb-0.5">4th Innings</div>
-                                                    <div className="text-xs sm:text-sm font-bold text-blue-200 truncate">{score.team2}</div>
-                                                    <div className="text-sm sm:text-base font-bold text-white">
-                                                        {score.team2_data2?.score || 0}/{score.team2_data2?.wickets || 0}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {/* Totals row */}
-                                            <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1 border-t border-gray-600">
-                                                <div className="text-center">
-                                                    <span className="text-[10px] sm:text-xs text-gray-400 font-semibold">Total: </span>
-                                                    <span className="text-sm sm:text-base font-extrabold text-white">
-                                                        {(score.team1_data?.score || 0) + (score.team1_data2?.score || 0)}
-                                                    </span>
-                                                </div>
-                                                <div className="text-center">
-                                                    <span className="text-[10px] sm:text-xs text-gray-400 font-semibold">Total: </span>
-                                                    <span className="text-sm sm:text-base font-extrabold text-white">
-                                                        {(score.team2_data?.score || 0) + (score.team2_data2?.score || 0)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        /* Limited-overs match: original layout */
-                                        <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
-                                            <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl border bg-red-900 border-red-700">
-                                                <div className="text-xs sm:text-sm font-bold mb-1 text-red-200 truncate">{score.team1}</div>
-                                                <div className="text-base sm:text-lg font-bold text-white">
-                                                    {score.team1_data?.score || 0}/{score.team1_data?.wickets || 0}
-                                                </div>
-                                                <div className="text-xs text-red-300">
-                                                    ⏰ {score.team1_data?.currentOver || 0}.{score.team1_data?.ballInOver || 0} overs
-                                                </div>
-                                            </div>
-                                            <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl border bg-blue-900 border-blue-700">
-                                                <div className="text-xs sm:text-sm font-bold mb-1 text-blue-200 truncate">{score.team2}</div>
-                                                <div className="text-base sm:text-lg font-bold text-white">
-                                                    {score.team2_data?.score || 0}/{score.team2_data?.wickets || 0}
-                                                </div>
-                                                <div className="text-xs text-blue-300">
-                                                    ⏰ {score.team2_data?.currentOver || 0}.{score.team2_data?.ballInOver || 0} overs
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
-                                        🎉 {score.result}
-                                    </div>
-                                </div>
-                            </div>
-                        </Link>
-                        );
-                    }))
-                ) : (
+                {matches.length > 0 ? matches.map(renderMatchCard) : (
                     <div className="flex flex-col items-center mt-12">
                         <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 p-8 rounded-2xl shadow-lg border border-gray-300 dark:border-gray-600">
                             <div className="text-6xl mb-4 text-center">🏏</div>
