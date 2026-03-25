@@ -180,8 +180,7 @@ function ScoreCard({
                         <div className="bg-white/20 backdrop-blur rounded-xl p-4 text-center shadow-lg">
                             <div className="text-white/80 text-sm font-bold mb-2">🤝 PARTNERSHIP</div>
                             <div className="text-xl sm:text-2xl font-black text-white">
-                                {current && current.length >= 2 ? 
-                                    (scorelist?.[current[0]] || 0) + (scorelist?.[current[1]] || 0) : 0}
+                                {getCurrentPartnership()}
                             </div>
                         </div>
 

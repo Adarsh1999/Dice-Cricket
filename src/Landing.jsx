@@ -1,21 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { BrowserRouter } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import Teams from './Teams';
 import CoinToss from './CoinToss';
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 import { useStateValue } from './StateProvider';
-import axios from './axios';
 import cx from 'classnames';
+import {
+    deleteSavedMatchRecord,
+    normalizeSavedMatch,
+    queueResumeMatch,
+    readSavedMatchRecordsFromStorage,
+    saveNamedMatchRecord,
+} from './savedMatch';
 
 function Landing() {
     const [team1Selected, setTeam1Selected] = useState('');
     const [times, setTimes] = useState(1);
     const [team2Selected, setTeam2Selected] = useState('');
     const [matchType, setMatchType] = useState('oneday');
+    const [savedMatchRecords, setSavedMatchRecords] = useState([]);
+    const [resumeError, setResumeError] = useState(null);
 
-    const [state, dispatch] = useStateValue();
+    const [, dispatch] = useStateValue();
     const [isTossed, setIsTossed] = useState(false);
+    const history = useHistory();
+
+    const refreshSavedMatches = () => {
+        setSavedMatchRecords(readSavedMatchRecordsFromStorage());
+    };
+
+    useEffect(() => {
+        refreshSavedMatches();
+    }, []);
 
     const login = () => {
         dispatch({
@@ -28,6 +44,69 @@ function Landing() {
             matchType: matchType,
         });
     };
+
+    const resumeSavedMatch = (savedMatch) => {
+        try {
+            queueResumeMatch(savedMatch);
+            setResumeError(null);
+            history.push('/match');
+        } catch (error) {
+            console.error('Failed to queue saved match', error);
+            setResumeError('Could not restore that saved match.');
+        }
+    };
+
+    const handleResumeLatestSave = () => {
+        const latestSavedRecord = readSavedMatchRecordsFromStorage()[0];
+
+        if (!latestSavedRecord) {
+            setResumeError('No browser save found yet. Import a JSON save instead.');
+            return;
+        }
+
+        resumeSavedMatch(latestSavedRecord.snapshot);
+    };
+
+    const handleResumeSavedRecord = (savedRecord) => {
+        resumeSavedMatch(savedRecord.snapshot);
+    };
+
+    const handleDeleteSavedRecord = (recordId) => {
+        const nextRecords = deleteSavedMatchRecord(recordId);
+        setSavedMatchRecords(nextRecords);
+    };
+
+    const handleImportSavedMatch = async (event) => {
+        const selectedFile = event.target.files?.[0];
+
+        if (!selectedFile) {
+            return;
+        }
+
+        try {
+            const fileContents = await selectedFile.text();
+            const savedMatch = normalizeSavedMatch(fileContents);
+
+            if (!savedMatch) {
+                throw new Error('Invalid saved match file');
+            }
+
+            const importedSaveName =
+                savedMatch.saveName || selectedFile.name.replace(/\.json$/i, '').replace(/[-_]+/g, ' ');
+            const savedRecord = saveNamedMatchRecord(savedMatch, importedSaveName);
+            refreshSavedMatches();
+            resumeSavedMatch(savedRecord.snapshot);
+        } catch (error) {
+            console.error('Failed to import saved match', error);
+            setResumeError('Selected file is not a valid Dice Cricket save.');
+        } finally {
+            event.target.value = '';
+        }
+    };
+
+    const latestSavedRecord = savedMatchRecords[0] || null;
+    const autoSaveRecord = savedMatchRecords.find((savedRecord) => savedRecord.isAutoSave) || null;
+    const manualSavedRecords = savedMatchRecords.filter((savedRecord) => !savedRecord.isAutoSave);
 
     return (
         <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col items-center">
@@ -98,6 +177,137 @@ function Landing() {
                             🚀 Let's Play Match! 🏏
                         </button>
                     </Link>
+                </div>
+
+                <div className="max-w-3xl mx-auto mt-8">
+                    <div className="bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-xl p-6">
+                        <div className="text-center mb-4">
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Resume Saved Match</h2>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                                Continue the latest auto-save, choose a named save, or import a previously downloaded JSON snapshot.
+                            </p>
+                        </div>
+
+                        {latestSavedRecord ? (
+                            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200 dark:border-amber-700 rounded-2xl px-4 py-4 text-sm text-gray-700 dark:text-gray-200 mb-4">
+                                <div className="font-bold text-base text-amber-800 dark:text-amber-300">
+                                    Latest Save: {latestSavedRecord.name}
+                                </div>
+                                <div className="mt-1">
+                                    {latestSavedRecord.snapshot.state.team1?.replace('_', ' ')} vs{' '}
+                                    {latestSavedRecord.snapshot.state.team2?.replace('_', ' ')}
+                                </div>
+                                <div className="mt-1">
+                                    Format: {latestSavedRecord.snapshot.state.matchType === 'test' ? 'Test' : 'One Day'} | Innings:{' '}
+                                    {latestSavedRecord.snapshot.appState.innings} | Score: {latestSavedRecord.snapshot.appState.score}/
+                                    {latestSavedRecord.snapshot.appState.wickets}
+                                </div>
+                                <div className="mt-1">
+                                    Saved: {new Date(latestSavedRecord.updatedAt).toLocaleString()}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-gray-100 dark:bg-gray-700/60 border border-dashed border-gray-300 dark:border-gray-500 rounded-2xl px-4 py-4 text-sm text-gray-600 dark:text-gray-300 mb-4 text-center">
+                                No browser save found yet. Import a saved JSON file to continue a match.
+                            </div>
+                        )}
+
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <button
+                                type="button"
+                                onClick={handleResumeLatestSave}
+                                className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300"
+                            >
+                                🔁 Resume Latest Save
+                            </button>
+
+                            <label className="bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 cursor-pointer text-center">
+                                📂 Import Save JSON
+                                <input type="file" accept=".json,application/json" className="hidden" onChange={handleImportSavedMatch} />
+                            </label>
+                        </div>
+
+                        {resumeError && (
+                            <div className="mt-4 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-200 rounded-2xl px-4 py-3 text-sm font-semibold text-center">
+                                {resumeError}
+                            </div>
+                        )}
+
+                        {autoSaveRecord && (
+                            <div className="mt-5">
+                                <div className="text-sm font-bold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-2">
+                                    Auto Save
+                                </div>
+                                <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-700 rounded-2xl px-4 py-4">
+                                    <div className="font-bold text-sky-800 dark:text-sky-300">{autoSaveRecord.name}</div>
+                                    <div className="text-sm text-gray-700 dark:text-gray-200 mt-1">
+                                        {autoSaveRecord.snapshot.state.team1?.replace('_', ' ')} vs {autoSaveRecord.snapshot.state.team2?.replace('_', ' ')}
+                                    </div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                        Innings {autoSaveRecord.snapshot.appState.innings} | Score {autoSaveRecord.snapshot.appState.score}/{autoSaveRecord.snapshot.appState.wickets} | Updated{' '}
+                                        {new Date(autoSaveRecord.updatedAt).toLocaleString()}
+                                    </div>
+                                    <div className="mt-3 flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleResumeSavedRecord(autoSaveRecord)}
+                                            className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
+                                        >
+                                            Resume
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {manualSavedRecords.length > 0 && (
+                            <div className="mt-5">
+                                <div className="text-sm font-bold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-2">
+                                    Named Saves
+                                </div>
+                                <div className="space-y-3">
+                                    {manualSavedRecords.map((savedRecord) => (
+                                        <div
+                                            key={savedRecord.id}
+                                            className="bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-600 rounded-2xl px-4 py-4 shadow-sm"
+                                        >
+                                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                                <div>
+                                                    <div className="font-bold text-gray-800 dark:text-gray-100">{savedRecord.name}</div>
+                                                    <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                                        {savedRecord.snapshot.state.team1?.replace('_', ' ')} vs {savedRecord.snapshot.state.team2?.replace('_', ' ')}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                        {savedRecord.snapshot.state.matchType === 'test' ? 'Test' : 'One Day'} | Innings {savedRecord.snapshot.appState.innings} | Score{' '}
+                                                        {savedRecord.snapshot.appState.score}/{savedRecord.snapshot.appState.wickets}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                        Updated {new Date(savedRecord.updatedAt).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 sm:justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleResumeSavedRecord(savedRecord)}
+                                                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
+                                                    >
+                                                        Resume
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteSavedRecord(savedRecord.id)}
+                                                        className="bg-red-500 hover:bg-red-600 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row justify-center gap-5 mt-8">

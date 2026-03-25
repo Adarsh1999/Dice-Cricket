@@ -9,6 +9,13 @@ import { useStateValue } from './StateProvider';
 import { Link } from 'react-router-dom';
 // import Summary from './Summary';
 import axios from './axios';
+import {
+    buildSavedMatchSnapshot,
+    consumeQueuedResumeMatch,
+    saveMatchToStorage,
+    saveNamedMatchRecord,
+    upsertAutoSaveRecord,
+} from './savedMatch';
 
 function App() {
     const [state, dispatch] = useStateValue();
@@ -30,6 +37,9 @@ function App() {
     const [playerObj, setPlayerObj] = useState();
     const [fallOn, setFallOn] = useState(Array(10).fill(''));
     const [playerFell, setPlayerFell] = useState(Array(10).fill(''));
+    const [manualSaveName, setManualSaveName] = useState('');
+    const [saveFeedback, setSaveFeedback] = useState(null);
+    const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null);
     const isTestMatch = state.matchType === 'test';
     const maxInnings = isTestMatch ? 4 : 2;
     const isTeam1Batting = isTestMatch ? innings === 1 || innings === 3 : innings === 1;
@@ -37,6 +47,7 @@ function App() {
     // Over tracking state
     const [currentOver, setCurrentOver] = useState(0);
     const [ballInOver, setBallInOver] = useState(0);
+    const [resumeStateChecked, setResumeStateChecked] = useState(false);
     
     // Stronger input blocking mechanism
     const [isUpdating, setIsUpdating] = useState(false);
@@ -44,6 +55,7 @@ function App() {
     const updateTimeoutRef = useRef(null);
     const pendingUpdateRef = useRef(false);
     const processingRef = useRef(false);
+    const autoSaveTimeoutRef = useRef(null);
     
     // Use refs to track current state values to avoid stale closures
     const currentPlayersRef = useRef(currentPlayers);
@@ -52,6 +64,86 @@ function App() {
     useEffect(() => {
         currentPlayersRef.current = currentPlayers;
     }, [currentPlayers]);
+
+    const applySavedMatchSnapshot = useCallback(
+        (savedMatch) => {
+            if (!savedMatch) {
+                return false;
+            }
+
+            const { state: savedState, appState: savedAppState, playerObj: savedPlayerObj } = savedMatch;
+
+            dispatch({
+                type: 'SET_TEAM',
+                team1: savedState.team1,
+                team2: savedState.team2,
+            });
+            dispatch({
+                type: 'SET_MATCH_TYPE',
+                matchType: savedState.matchType,
+            });
+            dispatch({
+                type: 'SET_TEAM1',
+                team1_data: savedState.team1_data,
+            });
+            dispatch({
+                type: 'SET_TEAM2',
+                team2_data: savedState.team2_data,
+            });
+            dispatch({
+                type: 'SET_TEAM1_SECOND',
+                team1_data2: savedState.team1_data2,
+            });
+            dispatch({
+                type: 'SET_TEAM2_SECOND',
+                team2_data2: savedState.team2_data2,
+            });
+            dispatch({
+                type: 'SET_RESULT',
+                result: savedState.result,
+            });
+
+            setPlayerObj(savedPlayerObj);
+            setScore(savedAppState.score);
+            setWickets(savedAppState.wickets);
+            setPlayers(savedAppState.players);
+            setCurrentPlayers(savedAppState.currentPlayers);
+            currentPlayersRef.current = savedAppState.currentPlayers;
+            setTotalTeamScore(savedAppState.totalTeamScore);
+            setTeam2FirstInningsScore(savedAppState.team2FirstInningsScore);
+            setTeam1SecondInningsScore(savedAppState.team1SecondInningsScore);
+            setTestTarget(savedAppState.testTarget);
+            setInnings(savedAppState.innings);
+            setPlayersOut(savedAppState.playersOut);
+            setBool(savedAppState.Bool);
+            setStriker(savedAppState.striker);
+            setMatchOver(savedAppState.matchOver);
+            setFallOn(savedAppState.fallOn);
+            setPlayerFell(savedAppState.playerFell);
+            setCurrentOver(savedAppState.currentOver);
+            setBallInOver(savedAppState.ballInOver);
+            processingRef.current = false;
+            setIsProcessing(false);
+            setIsUpdating(false);
+            pendingUpdateRef.current = false;
+
+            return true;
+        },
+        [dispatch],
+    );
+
+    useEffect(() => {
+        const savedMatch = consumeQueuedResumeMatch();
+
+        if (savedMatch && applySavedMatchSnapshot(savedMatch)) {
+            setSaveFeedback({
+                type: 'success',
+                message: 'Saved match restored. Continue from where you left off.',
+            });
+        }
+
+        setResumeStateChecked(true);
+    }, [applySavedMatchSnapshot]);
 
     const getTeam = async () => {
         const { data } = await axios.get(`/teams?q=${state.team1}&p=${state.team2}`);
@@ -65,10 +157,77 @@ function App() {
     };
 
     useEffect(() => {
-        if (state.team1 && state.team2) {
+        if (resumeStateChecked && state.team1 && state.team2) {
             getTeam();
         }
-    }, [state.team1, state.team2]);
+    }, [resumeStateChecked, state.team1, state.team2]);
+
+    const createCurrentMatchSnapshot = useCallback(
+        (saveName = '') =>
+            buildSavedMatchSnapshot({
+                state: {
+                    team1: state.team1,
+                    team2: state.team2,
+                    team1_data: state.team1_data,
+                    team2_data: state.team2_data,
+                    team1_data2: state.team1_data2,
+                    team2_data2: state.team2_data2,
+                    matchType: state.matchType,
+                    result: state.result,
+                    timestamp: state.timestamp,
+                },
+                playerObj,
+                appState: {
+                    score,
+                    wickets,
+                    players,
+                    currentPlayers,
+                    totalTeamScore,
+                    team2FirstInningsScore,
+                    team1SecondInningsScore,
+                    testTarget,
+                    innings,
+                    playersOut,
+                    Bool,
+                    striker,
+                    matchOver,
+                    fallOn,
+                    playerFell,
+                    currentOver,
+                    ballInOver,
+                },
+                saveName,
+            }),
+        [
+            Bool,
+            ballInOver,
+            currentOver,
+            currentPlayers,
+            fallOn,
+            innings,
+            matchOver,
+            playerFell,
+            playerObj,
+            players,
+            playersOut,
+            score,
+            state.matchType,
+            state.result,
+            state.team1,
+            state.team1_data,
+            state.team1_data2,
+            state.team2,
+            state.team2_data,
+            state.team2_data2,
+            state.timestamp,
+            striker,
+            team1SecondInningsScore,
+            team2FirstInningsScore,
+            testTarget,
+            totalTeamScore,
+            wickets,
+        ],
+    );
 
     const buildTeamPayload = (teamKey) => {
         const teamPlayers = teamKey === 'team1' ? playerObj?.team1 : playerObj?.team2;
@@ -256,6 +415,86 @@ function App() {
         setMatchOver(1);
     };
 
+    const downloadSavedMatch = (filename, contents) => {
+        const fileBlob = new Blob([contents], { type: 'application/json' });
+        const fileUrl = window.URL.createObjectURL(fileBlob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = fileUrl;
+        downloadLink.download = filename;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        window.setTimeout(() => window.URL.revokeObjectURL(fileUrl), 0);
+    };
+
+    const handleSaveGame = () => {
+        try {
+            const savedMatch = createCurrentMatchSnapshot(manualSaveName);
+
+            if (!savedMatch) {
+                throw new Error('Could not build a valid match snapshot.');
+            }
+
+            const savedRecord = saveNamedMatchRecord(savedMatch, manualSaveName);
+            const serializedMatch = saveMatchToStorage(savedMatch);
+            const safeTeam1 = (savedMatch.state.team1 || 'team1').replace(/_/g, '-').toLowerCase();
+            const safeTeam2 = (savedMatch.state.team2 || 'team2').replace(/_/g, '-').toLowerCase();
+            const timestamp = savedMatch.savedAt.replace(/[:.]/g, '-');
+            const safeSaveName = (savedRecord?.name || savedMatch.saveName || 'save')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+
+            downloadSavedMatch(
+                `dice-cricket-${safeSaveName || savedMatch.state.matchType}-${safeTeam1}-vs-${safeTeam2}-${timestamp}.json`,
+                serializedMatch,
+            );
+
+            setSaveFeedback({
+                type: 'success',
+                message: `Saved "${savedRecord?.name || savedMatch.saveName}" and downloaded the JSON file.`,
+            });
+            setManualSaveName('');
+        } catch (error) {
+            console.error('Failed to save current match', error);
+            setSaveFeedback({
+                type: 'error',
+                message: 'Could not save the current match snapshot.',
+            });
+        }
+    };
+
+    useEffect(() => {
+        if (!resumeStateChecked || !state.team1 || !state.team2) {
+            return;
+        }
+
+        if (autoSaveTimeoutRef.current) {
+            clearTimeout(autoSaveTimeoutRef.current);
+        }
+
+        autoSaveTimeoutRef.current = setTimeout(() => {
+            try {
+                const savedMatch = createCurrentMatchSnapshot('Auto Save');
+
+                if (!savedMatch) {
+                    return;
+                }
+
+                const autoSaveRecord = upsertAutoSaveRecord(savedMatch);
+                setLastAutoSavedAt(autoSaveRecord?.updatedAt || savedMatch.savedAt);
+            } catch (error) {
+                console.error('Failed to auto-save current match', error);
+            }
+        }, 250);
+
+        return () => {
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+        };
+    }, [createCurrentMatchSnapshot, resumeStateChecked, state.team1, state.team2]);
+
     useEffect(() => {
         const target = isTestMatch
             ? innings === 4
@@ -371,6 +610,9 @@ function App() {
             if (updateTimeoutRef.current) {
                 clearTimeout(updateTimeoutRef.current);
             }
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
         };
     }, []);
 
@@ -478,6 +720,32 @@ function App() {
                                 >
                                     🏏 Next Innings
                                 </button>
+
+                                <div className="bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 shadow-lg">
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                                        Save Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={manualSaveName}
+                                        onChange={(event) => setManualSaveName(event.target.value)}
+                                        placeholder="Example: Chase setup before final over"
+                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                                    />
+                                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                        Auto-save also updates after every roll.
+                                        {lastAutoSavedAt && ` Last auto-save: ${new Date(lastAutoSavedAt).toLocaleTimeString()}`}
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
+                                    onClick={handleSaveGame}
+                                    disabled={!resumeStateChecked}
+                                >
+                                    💾 Create Named Save + JSON
+                                </button>
                                 
                                 <Link to={{ pathname: '/summary' }}>
                                     <button
@@ -488,6 +756,18 @@ function App() {
                                         📊 Match Summary
                                     </button>
                                 </Link>
+
+                                {saveFeedback && (
+                                    <div
+                                        className={`rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ${
+                                            saveFeedback.type === 'success'
+                                                ? 'bg-green-100 text-green-800 border border-green-300'
+                                                : 'bg-red-100 text-red-800 border border-red-300'
+                                        }`}
+                                    >
+                                        {saveFeedback.message}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
