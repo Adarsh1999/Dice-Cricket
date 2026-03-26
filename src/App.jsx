@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useReducer } from 'react';
 import './App.css';
 import Dice from 'modern-react-dice-roll';
 import Header from './Header';
@@ -12,58 +12,52 @@ import axios from './axios';
 import {
     buildSavedMatchSnapshot,
     consumeQueuedResumeMatch,
+    overwriteSavedMatchRecord,
+    readSavedMatchRecordsFromStorage,
     saveMatchToStorage,
     saveNamedMatchRecord,
     upsertAutoSaveRecord,
 } from './savedMatch';
+import { createInitialMatchEngineState, matchEngineReducer } from './matchEngine';
 
 function App() {
     const [state, dispatch] = useStateValue();
 
-    const [score, setScore] = useState(0);
-    const [wickets, setWickets] = useState(0);
-    // const [currentRun, setCurrentRun] = useState(0);
-    const [players, setPlayers] = useState(Array(11).fill(0));
-    const [currentPlayers, setCurrentPlayers] = useState([0, 1]);
-    const [totalTeamScore, setTotalTeamScore] = useState(0);
-    const [team2FirstInningsScore, setTeam2FirstInningsScore] = useState(0);
-    const [team1SecondInningsScore, setTeam1SecondInningsScore] = useState(0);
-    const [testTarget, setTestTarget] = useState(null);
-    const [innings, setInnings] = useState(1);
-    const [playersOut, setPlayersOut] = useState(Array(11).fill(0));
-    const [Bool, setBool] = useState(false);
-    const [striker, setStriker] = useState(0);
-    const [matchOver, setMatchOver] = useState(0);
     const [playerObj, setPlayerObj] = useState();
-    const [fallOn, setFallOn] = useState(Array(10).fill(''));
-    const [playerFell, setPlayerFell] = useState(Array(10).fill(''));
     const [manualSaveName, setManualSaveName] = useState('');
+    const [savedMatchRecords, setSavedMatchRecords] = useState([]);
+    const [selectedOverwriteSaveId, setSelectedOverwriteSaveId] = useState('');
     const [saveFeedback, setSaveFeedback] = useState(null);
     const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null);
+    const [matchState, matchDispatch] = useReducer(matchEngineReducer, undefined, createInitialMatchEngineState);
+    const {
+        score,
+        wickets,
+        players,
+        currentPlayers,
+        totalTeamScore,
+        team2FirstInningsScore,
+        team1SecondInningsScore,
+        testTarget,
+        innings,
+        playersOut,
+        Bool,
+        striker,
+        matchOver,
+        fallOn,
+        playerFell,
+        currentOver,
+        ballInOver,
+    } = matchState;
     const isTestMatch = state.matchType === 'test';
     const maxInnings = isTestMatch ? 4 : 2;
     const isTeam1Batting = isTestMatch ? innings === 1 || innings === 3 : innings === 1;
-    
-    // Over tracking state
-    const [currentOver, setCurrentOver] = useState(0);
-    const [ballInOver, setBallInOver] = useState(0);
     const [resumeStateChecked, setResumeStateChecked] = useState(false);
     
     // Stronger input blocking mechanism
-    const [isUpdating, setIsUpdating] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    const updateTimeoutRef = useRef(null);
-    const pendingUpdateRef = useRef(false);
     const processingRef = useRef(false);
     const autoSaveTimeoutRef = useRef(null);
-    
-    // Use refs to track current state values to avoid stale closures
-    const currentPlayersRef = useRef(currentPlayers);
-    
-    // Update ref when state changes
-    useEffect(() => {
-        currentPlayersRef.current = currentPlayers;
-    }, [currentPlayers]);
 
     const applySavedMatchSnapshot = useCallback(
         (savedMatch) => {
@@ -104,28 +98,12 @@ function App() {
             });
 
             setPlayerObj(savedPlayerObj);
-            setScore(savedAppState.score);
-            setWickets(savedAppState.wickets);
-            setPlayers(savedAppState.players);
-            setCurrentPlayers(savedAppState.currentPlayers);
-            currentPlayersRef.current = savedAppState.currentPlayers;
-            setTotalTeamScore(savedAppState.totalTeamScore);
-            setTeam2FirstInningsScore(savedAppState.team2FirstInningsScore);
-            setTeam1SecondInningsScore(savedAppState.team1SecondInningsScore);
-            setTestTarget(savedAppState.testTarget);
-            setInnings(savedAppState.innings);
-            setPlayersOut(savedAppState.playersOut);
-            setBool(savedAppState.Bool);
-            setStriker(savedAppState.striker);
-            setMatchOver(savedAppState.matchOver);
-            setFallOn(savedAppState.fallOn);
-            setPlayerFell(savedAppState.playerFell);
-            setCurrentOver(savedAppState.currentOver);
-            setBallInOver(savedAppState.ballInOver);
+            matchDispatch({
+                type: 'HYDRATE_MATCH_STATE',
+                payload: savedAppState,
+            });
             processingRef.current = false;
             setIsProcessing(false);
-            setIsUpdating(false);
-            pendingUpdateRef.current = false;
 
             return true;
         },
@@ -156,11 +134,27 @@ function App() {
         });
     };
 
+    const refreshSavedMatches = useCallback(async () => {
+        try {
+            setSavedMatchRecords(await readSavedMatchRecordsFromStorage());
+        } catch (error) {
+            console.error('Failed to load saved matches in match screen', error);
+        }
+    }, []);
+
     useEffect(() => {
         if (resumeStateChecked && state.team1 && state.team2) {
             getTeam();
         }
     }, [resumeStateChecked, state.team1, state.team2]);
+
+    useEffect(() => {
+        if (!resumeStateChecked) {
+            return;
+        }
+
+        refreshSavedMatches();
+    }, [refreshSavedMatches, resumeStateChecked]);
 
     const createCurrentMatchSnapshot = useCallback(
         (saveName = '') =>
@@ -277,20 +271,6 @@ function App() {
         });
     };
 
-    const resetInningsState = () => {
-        setScore(0);
-        setWickets(0);
-        setPlayersOut(Array(11).fill(0));
-        setFallOn(Array(10).fill(''));
-        setPlayerFell(Array(10).fill(''));
-        setPlayers(Array(11).fill(0));
-        setBool(false);
-        setCurrentPlayers([0, 1]);
-        setStriker(0);
-        setCurrentOver(0);
-        setBallInOver(0);
-    };
-
     // To refresh after 10 wickets haul
     const afterEffect = () => {
         if (innings >= maxInnings) {
@@ -300,28 +280,11 @@ function App() {
             const teamKey = isTeam1Batting ? 'team1' : 'team2';
             const isSecondInnings = isTestMatch && ((teamKey === 'team1' && innings === 3) || (teamKey === 'team2' && innings === 4));
             persistInningsData(teamKey, isSecondInnings);
-
-            if (innings === 1) {
-                setTotalTeamScore(score);
-                setInnings(2);
-                resetInningsState();
-                return;
-            }
-
-            if (isTestMatch && innings === 2) {
-                setTeam2FirstInningsScore(score);
-                setInnings(3);
-                resetInningsState();
-                return;
-            }
-
-            if (isTestMatch && innings === 3) {
-                setTeam1SecondInningsScore(score);
-                const target = totalTeamScore + score - team2FirstInningsScore + 1;
-                setTestTarget(Math.max(1, target));
-                setInnings(4);
-                resetInningsState();
-            }
+            matchDispatch({
+                type: 'ADVANCE_INNINGS',
+                isTestMatch,
+                maxInnings,
+            });
         };
         wickets === 10 ? setStuff() : console.log('useeffect for 10 wickets');
     };
@@ -343,51 +306,11 @@ function App() {
         setIsProcessing(true);
         console.log('Processing flag set to true');
         
-        // Process the score update
-        if (value === 5) {
-            // Wicket case - wickets don't count as balls in the over
-            console.log('Processing wicket...');
-            setWickets((prevWickets) => prevWickets + 1);
-            setBool(true);
-        } else {
-            // Scoring case - this counts as a ball in the over
-            console.log(`Processing ${value} runs...`);
-            
-            // First, get the current score to determine which player should score
-            const currentScore = score; // Use current score state
-            const isEven = currentScore % 2 === 0;
-            const activeBatterIndex = isEven ? 0 : 1;
-            const playerIndex = currentPlayersRef.current[activeBatterIndex];
-            
-            console.log(`Current score: ${currentScore}, Player ${playerIndex + 1} will score ${value} runs`);
-            
-            // Update all states independently
-            // 1. Update team score
-            setScore((prevScore) => prevScore + value);
-            
-            // 2. Update player's individual score
-            setPlayers((prevPlayers) => {
-                const newPlayers = [...prevPlayers];
-                newPlayers[playerIndex] += value;
-                console.log(`Player ${playerIndex + 1} score updated: ${prevPlayers[playerIndex]} -> ${newPlayers[playerIndex]}`);
-                return newPlayers;
-            });
-            
-            // 3. Update over tracking
-            setBallInOver((prevBall) => {
-                const newBall = prevBall + 1;
-                if (newBall === 6) {
-                    setCurrentOver((prevOver) => prevOver + 1);
-                    return 0;
-                }
-                return newBall;
-            });
-            
-            // 4. Update striker for next ball
-            const newScore = currentScore + value;
-            const nextStriker = newScore % 2 === 0 ? currentPlayersRef.current[0] : currentPlayersRef.current[1];
-            setStriker(nextStriker);
-        }
+        matchDispatch({
+            type: 'ROLL',
+            value,
+            battingPlayers: isTeam1Batting ? playerObj?.team1 : playerObj?.team2,
+        });
         
         // Reset processing flag after a short delay
         setTimeout(() => {
@@ -396,7 +319,7 @@ function App() {
             console.log('Processing flag reset to false');
         }, 150); // Reduced from 500ms to 100ms
         
-    }, [score, isProcessing]); // Add isProcessing as dependency
+    }, [isProcessing, isTeam1Batting, playerObj?.team1, playerObj?.team2]);
 
     const dispatchTeam2 = () => {
         const teamKey = isTeam1Batting ? 'team1' : 'team2';
@@ -412,7 +335,10 @@ function App() {
             type: 'SET_RESULT',
             result: resultText,
         });
-        setMatchOver(1);
+        matchDispatch({
+            type: 'SET_MATCH_OVER',
+            matchOver: 1,
+        });
     };
 
     const downloadSavedMatch = (filename, contents) => {
@@ -427,7 +353,26 @@ function App() {
         window.setTimeout(() => window.URL.revokeObjectURL(fileUrl), 0);
     };
 
-    const handleSaveGame = () => {
+    const persistAndDownloadSnapshot = (savedSnapshot, savedRecord) => {
+        const persistedSnapshot = savedRecord?.snapshot || savedSnapshot;
+        const serializedMatch = saveMatchToStorage(persistedSnapshot);
+        const safeTeam1 = (persistedSnapshot.state.team1 || 'team1').replace(/_/g, '-').toLowerCase();
+        const safeTeam2 = (persistedSnapshot.state.team2 || 'team2').replace(/_/g, '-').toLowerCase();
+        const timestamp = persistedSnapshot.savedAt.replace(/[:.]/g, '-');
+        const safeSaveName = (savedRecord?.name || persistedSnapshot.saveName || 'save')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+
+        downloadSavedMatch(
+            `dice-cricket-${safeSaveName || persistedSnapshot.state.matchType}-${safeTeam1}-vs-${safeTeam2}-${timestamp}.json`,
+            serializedMatch,
+        );
+
+        return serializedMatch;
+    };
+
+    const handleSaveGame = async () => {
         try {
             const savedMatch = createCurrentMatchSnapshot(manualSaveName);
 
@@ -435,24 +380,16 @@ function App() {
                 throw new Error('Could not build a valid match snapshot.');
             }
 
-            const savedRecord = saveNamedMatchRecord(savedMatch, manualSaveName);
-            const serializedMatch = saveMatchToStorage(savedMatch);
-            const safeTeam1 = (savedMatch.state.team1 || 'team1').replace(/_/g, '-').toLowerCase();
-            const safeTeam2 = (savedMatch.state.team2 || 'team2').replace(/_/g, '-').toLowerCase();
-            const timestamp = savedMatch.savedAt.replace(/[:.]/g, '-');
-            const safeSaveName = (savedRecord?.name || savedMatch.saveName || 'save')
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '');
-
-            downloadSavedMatch(
-                `dice-cricket-${safeSaveName || savedMatch.state.matchType}-${safeTeam1}-vs-${safeTeam2}-${timestamp}.json`,
-                serializedMatch,
-            );
+            const savedRecord = await saveNamedMatchRecord(savedMatch, manualSaveName);
+            persistAndDownloadSnapshot(savedMatch, savedRecord);
+            await refreshSavedMatches();
+            setSelectedOverwriteSaveId(savedRecord?.id || '');
 
             setSaveFeedback({
                 type: 'success',
-                message: `Saved "${savedRecord?.name || savedMatch.saveName}" and downloaded the JSON file.`,
+                message: `Saved "${savedRecord?.name || savedMatch.saveName}" ${
+                    savedRecord?.storageLocation === 'backend' ? 'to the backend' : 'locally in this browser'
+                } and downloaded the JSON file.`,
             });
             setManualSaveName('');
         } catch (error) {
@@ -460,6 +397,46 @@ function App() {
             setSaveFeedback({
                 type: 'error',
                 message: 'Could not save the current match snapshot.',
+            });
+        }
+    };
+
+    const handleOverwriteSave = async () => {
+        try {
+            if (!selectedOverwriteSaveId) {
+                throw new Error('Select a save slot to overwrite.');
+            }
+
+            const overwriteTarget = savedMatchRecords.find((savedRecord) => savedRecord.id === selectedOverwriteSaveId);
+
+            if (!overwriteTarget) {
+                throw new Error('Selected save slot was not found.');
+            }
+
+            const savedMatch = createCurrentMatchSnapshot(overwriteTarget.name);
+
+            if (!savedMatch) {
+                throw new Error('Could not build a valid match snapshot.');
+            }
+
+            const overwrittenRecord = await overwriteSavedMatchRecord(selectedOverwriteSaveId, savedMatch, {
+                name: overwriteTarget.name,
+            });
+
+            persistAndDownloadSnapshot(savedMatch, overwrittenRecord);
+            await refreshSavedMatches();
+
+            setSaveFeedback({
+                type: 'success',
+                message: `Overwrote "${overwrittenRecord?.name || overwriteTarget.name}" ${
+                    overwrittenRecord?.storageLocation === 'backend' ? 'on the backend' : 'locally in this browser'
+                } and downloaded the JSON file.`,
+            });
+        } catch (error) {
+            console.error('Failed to overwrite saved match', error);
+            setSaveFeedback({
+                type: 'error',
+                message: 'Could not overwrite the selected save slot.',
             });
         }
     };
@@ -474,18 +451,22 @@ function App() {
         }
 
         autoSaveTimeoutRef.current = setTimeout(() => {
-            try {
-                const savedMatch = createCurrentMatchSnapshot('Auto Save');
+            const runAutoSave = async () => {
+                try {
+                    const savedMatch = createCurrentMatchSnapshot('Auto Save');
 
-                if (!savedMatch) {
-                    return;
+                    if (!savedMatch) {
+                        return;
+                    }
+
+                    const autoSaveRecord = await upsertAutoSaveRecord(savedMatch);
+                    setLastAutoSavedAt(autoSaveRecord?.updatedAt || savedMatch.savedAt);
+                } catch (error) {
+                    console.error('Failed to auto-save current match', error);
                 }
+            };
 
-                const autoSaveRecord = upsertAutoSaveRecord(savedMatch);
-                setLastAutoSavedAt(autoSaveRecord?.updatedAt || savedMatch.savedAt);
-            } catch (error) {
-                console.error('Failed to auto-save current match', error);
-            }
+            runAutoSave();
         }, 250);
 
         return () => {
@@ -494,6 +475,20 @@ function App() {
             }
         };
     }, [createCurrentMatchSnapshot, resumeStateChecked, state.team1, state.team2]);
+
+    const overwriteCandidates = savedMatchRecords.filter(
+        (savedRecord) =>
+            !savedRecord.isAutoSave &&
+            savedRecord.snapshot.state.team1 === state.team1 &&
+            savedRecord.snapshot.state.team2 === state.team2 &&
+            savedRecord.snapshot.state.matchType === state.matchType,
+    );
+
+    useEffect(() => {
+        if (selectedOverwriteSaveId && !overwriteCandidates.some((savedRecord) => savedRecord.id === selectedOverwriteSaveId)) {
+            setSelectedOverwriteSaveId('');
+        }
+    }, [overwriteCandidates, selectedOverwriteSaveId]);
 
     useEffect(() => {
         const target = isTestMatch
@@ -509,16 +504,6 @@ function App() {
             endMatch(`${state.team2} won by ${10 - wickets} wickets`);
         }
     }, [score, innings, totalTeamScore, testTarget, team1SecondInningsScore, team2FirstInningsScore, isTestMatch, wickets, matchOver, state.team2]);
-
-    useEffect(() => {
-        console.log('player fallen on odd', playerFell, innings);
-
-        if (score % 2 === 0) {
-            setStriker(currentPlayers[0]);
-        } else {
-            setStriker(currentPlayers[1]);
-        }
-    }, [score]);
 
     // this useeffect is for the fallen wickets and as well as for changing playersout status and also declaring the winner
     useEffect(() => {
@@ -541,75 +526,11 @@ function App() {
             console.log('team 1 won');
             endMatch(`${state.team1} won by ${Math.max(0, target - 1 - score)} runs`);
         }
-        //most complex use case of usestate but very important refer for future
-        const battingPlayers = isTeam1Batting ? playerObj?.team1 : playerObj?.team2;
-        if (Bool && score % 2 === 0) {
-            setCurrentPlayers((prevState) => {
-                // next banda kon ayega uska logic generally wicket no. ke baad 1 add
-                const val = prevState.map((item, idx) => (idx === 0 ? wickets + 1 : item));
-                // console.log(val, 'val');
-                setPlayersOut((prevState) => {
-                    const val = prevState.map((item, idx) => (idx === currentPlayers[0] ? 1 : item));
-                    setStriker(currentPlayers[0]);
-
-                    console.log('players out at even ', playersOut);
-                    return val;
-                });
-                setPlayerFell((prevState) => {
-                    const val = prevState.map((item, idx) =>
-                        idx === wickets - 1 ? battingPlayers?.[currentPlayers[0]] ?? item : item,
-                    );
-                    console.log('player fallen on odd', playerFell);
-
-                    return val;
-                });
-                setFallOn((prevState) => {
-                    const val = prevState.map((item, idx) => (idx === wickets - 1 ? score : item));
-                    console.log('player got out on ?', fallOn);
-
-                    return val;
-                });
-                return val;
-            });
-            // console.log(currentPlayers)
-        } else if (Bool && score % 2 === 1) {
-            setCurrentPlayers((prevState) => {
-                const val = prevState.map((item, idx) => (idx === 1 ? wickets + 1 : item));
-                // console.log(val, 'val');
-                setPlayersOut((prevState) => {
-                    const val = prevState.map((item, idx) => (idx === currentPlayers[1] ? 1 : item));
-                    console.log('players out at odd', playersOut);
-                    setStriker(currentPlayers[1]);
-
-                    return val;
-                });
-                setPlayerFell((prevState) => {
-                    const val = prevState.map((item, idx) =>
-                        idx === wickets - 1 ? battingPlayers?.[currentPlayers[1]] ?? item : item,
-                    );
-
-                    console.log('player fallen on odd', playerFell);
-
-                    return val;
-                });
-                setFallOn((prevState) => {
-                    const val = prevState.map((item, idx) => (idx === wickets - 1 ? score : item));
-                    console.log('player got out on ?', fallOn);
-
-                    return val;
-                });
-                return val;
-            });
-            // console.log(currentPlayers)
-        }
     }, [wickets]);
 
     // Cleanup timeout on unmount
     useEffect(() => {
         return () => {
-            if (updateTimeoutRef.current) {
-                clearTimeout(updateTimeoutRef.current);
-            }
             if (autoSaveTimeoutRef.current) {
                 clearTimeout(autoSaveTimeoutRef.current);
             }
@@ -745,6 +666,40 @@ function App() {
                                     disabled={!resumeStateChecked}
                                 >
                                     💾 Create Named Save + JSON
+                                </button>
+
+                                <div className="bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 shadow-lg">
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                                        Overwrite Existing Save
+                                    </label>
+                                    <select
+                                        value={selectedOverwriteSaveId}
+                                        onChange={(event) => setSelectedOverwriteSaveId(event.target.value)}
+                                        disabled={!resumeStateChecked || !overwriteCandidates.length}
+                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 disabled:opacity-60"
+                                    >
+                                        <option value="">Select a save slot</option>
+                                        {overwriteCandidates.map((savedRecord) => (
+                                            <option key={savedRecord.id} value={savedRecord.id}>
+                                                {savedRecord.name} | {savedRecord.storageLocation === 'backend' ? 'Backend' : 'Browser'} |{' '}
+                                                {new Date(savedRecord.updatedAt).toLocaleString()}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                        {overwriteCandidates.length
+                                            ? 'Only named saves for this matchup and format are shown here.'
+                                            : 'No named saves for this matchup yet. Create one first.'}
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
+                                    onClick={handleOverwriteSave}
+                                    disabled={!resumeStateChecked || !selectedOverwriteSaveId}
+                                >
+                                    ♻️ Overwrite Selected Save + JSON
                                 </button>
                                 
                                 <Link to={{ pathname: '/summary' }}>

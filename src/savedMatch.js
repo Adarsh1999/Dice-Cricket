@@ -1,3 +1,15 @@
+import {
+    deleteSavedMatchRecordFromDb,
+    getAllSavedMatchRecordsFromDb,
+    putSavedMatchRecordInDb,
+} from './savedMatchDb';
+import {
+    createSavedMatchRecordOnApi,
+    deleteSavedMatchRecordOnApi,
+    fetchSavedMatchRecordsFromApi,
+    updateSavedMatchRecordOnApi,
+} from './savedMatchApi';
+
 const PLAYER_COUNT = 11;
 const WICKET_COUNT = 10;
 
@@ -5,6 +17,8 @@ export const SAVED_MATCH_STORAGE_KEY = 'diceCricketSavedMatch';
 export const SAVED_MATCHES_STORAGE_KEY = 'diceCricketSavedMatches';
 export const RESUME_MATCH_STORAGE_KEY = 'diceCricketResumeMatch';
 export const AUTO_SAVE_RECORD_ID = 'autosave-current';
+export const LOCAL_SAVE_STORAGE = 'local';
+export const BACKEND_SAVE_STORAGE = 'backend';
 
 const toFiniteNumber = (value, fallback = 0) => {
     const parsed = Number(value);
@@ -101,7 +115,7 @@ const getDefaultSaveName = (snapshot, isAutoSave = false) => {
     } - Innings ${snapshot.appState.innings}`;
 };
 
-const getStoredRecords = () => {
+const getLegacyStoredRecords = () => {
     if (typeof window === 'undefined') {
         return [];
     }
@@ -111,13 +125,15 @@ const getStoredRecords = () => {
     return Array.isArray(parsedRecords) ? parsedRecords : [];
 };
 
-const writeStoredRecords = (records) => {
+const writeLegacyStoredRecords = (records) => {
     if (typeof window === 'undefined') {
         return;
     }
 
     window.localStorage.setItem(SAVED_MATCHES_STORAGE_KEY, JSON.stringify(records));
 };
+
+const canUseIndexedDb = () => typeof window !== 'undefined' && !!window.indexedDB;
 
 export const createDefaultInningsData = () => ({
     scorelist: Array(PLAYER_COUNT).fill(0),
@@ -291,6 +307,11 @@ export const normalizeSavedMatchRecord = (input) => {
 
     const isAutoSave = Boolean(input.isAutoSave) || input.id === AUTO_SAVE_RECORD_ID;
     const updatedAt = typeof input.updatedAt === 'string' ? input.updatedAt : snapshot.savedAt;
+    const storageLocation = isAutoSave
+        ? LOCAL_SAVE_STORAGE
+        : input.storageLocation === BACKEND_SAVE_STORAGE
+        ? BACKEND_SAVE_STORAGE
+        : LOCAL_SAVE_STORAGE;
     const name =
         typeof input.name === 'string' && input.name.trim()
             ? input.name.trim()
@@ -301,11 +322,111 @@ export const normalizeSavedMatchRecord = (input) => {
         name,
         updatedAt,
         isAutoSave,
+        storageLocation,
         snapshot: {
             ...snapshot,
             saveName: name,
         },
     };
+};
+
+const dedupeSavedMatchRecords = (records) => {
+    const uniqueRecords = new Map();
+
+    records.forEach((record) => {
+        if (!record?.id) {
+            return;
+        }
+
+        uniqueRecords.set(record.id, record);
+    });
+
+    return [...uniqueRecords.values()];
+};
+
+const readLocalSavedMatchRecords = async () => {
+    let normalizedRecords = [];
+
+    if (canUseIndexedDb()) {
+        try {
+            normalizedRecords = (await getAllSavedMatchRecordsFromDb()).map(normalizeSavedMatchRecord).filter(Boolean);
+        } catch (error) {
+            console.error('Failed to read saved matches from IndexedDB, falling back to localStorage.', error);
+        }
+    }
+
+    if (!normalizedRecords.length) {
+        normalizedRecords = getLegacyStoredRecords().map(normalizeSavedMatchRecord).filter(Boolean);
+
+        if (normalizedRecords.length && canUseIndexedDb()) {
+            await persistSavedMatchRecords(normalizedRecords);
+        }
+    }
+
+    if (normalizedRecords.length) {
+        return sortSavedMatchRecords(normalizedRecords);
+    }
+
+    if (typeof window === 'undefined') {
+        return [];
+    }
+
+    const legacySnapshot = normalizeSavedMatch(window.localStorage.getItem(SAVED_MATCH_STORAGE_KEY));
+    if (!legacySnapshot) {
+        return [];
+    }
+
+    return [
+        {
+            id: AUTO_SAVE_RECORD_ID,
+            name: 'Auto Save',
+            updatedAt: legacySnapshot.savedAt,
+            isAutoSave: true,
+            storageLocation: LOCAL_SAVE_STORAGE,
+            snapshot: {
+                ...legacySnapshot,
+                saveName: legacySnapshot.saveName || 'Auto Save',
+            },
+        },
+    ];
+};
+
+const readBackendSavedMatchRecords = async () => {
+    const records = await fetchSavedMatchRecordsFromApi();
+    return records
+        .map((record) =>
+            normalizeSavedMatchRecord({
+                ...record,
+                storageLocation: BACKEND_SAVE_STORAGE,
+            }),
+        )
+        .filter(Boolean);
+};
+
+const persistSavedMatchRecords = async (records) => {
+    if (canUseIndexedDb()) {
+        try {
+            const existingRecords = await getAllSavedMatchRecordsFromDb();
+            const nextRecordIds = new Set(records.map((record) => record.id));
+
+            await Promise.all(records.map((record) => putSavedMatchRecordInDb(record)));
+            await Promise.all(
+                existingRecords
+                    .filter((record) => !nextRecordIds.has(record.id))
+                    .map((record) => deleteSavedMatchRecordFromDb(record.id)),
+            );
+
+            if (typeof window !== 'undefined') {
+                window.localStorage.removeItem(SAVED_MATCHES_STORAGE_KEY);
+            }
+
+            return;
+        } catch (error) {
+            console.error('IndexedDB persistence failed, falling back to localStorage.', error);
+        }
+    }
+
+    writeLegacyStoredRecords(records);
 };
 
 export const buildSavedMatchSnapshot = ({ state, playerObj, appState, saveName = '' }) =>
@@ -338,46 +459,31 @@ export const readSavedMatchFromStorage = () => {
         return null;
     }
 
-    const storedRecords = readSavedMatchRecordsFromStorage();
-    if (storedRecords.length) {
-        return storedRecords[0].snapshot;
-    }
-
     const serializedSnapshot = window.localStorage.getItem(SAVED_MATCH_STORAGE_KEY);
     return normalizeSavedMatch(serializedSnapshot);
 };
 
-export const readSavedMatchRecordsFromStorage = () => {
-    const normalizedRecords = getStoredRecords().map(normalizeSavedMatchRecord).filter(Boolean);
+export const readSavedMatchRecordsFromStorage = async () => {
+    const localRecords = await readLocalSavedMatchRecords();
+    const autoSaveRecords = localRecords.filter((savedRecord) => savedRecord.isAutoSave);
+    const localNamedRecords = localRecords.filter(
+        (savedRecord) => !savedRecord.isAutoSave && savedRecord.storageLocation !== BACKEND_SAVE_STORAGE,
+    );
 
-    if (normalizedRecords.length) {
-        return sortSavedMatchRecords(normalizedRecords);
+    try {
+        const backendRecords = await readBackendSavedMatchRecords();
+        const nextRecords = sortSavedMatchRecords(
+            dedupeSavedMatchRecords([...autoSaveRecords, ...backendRecords, ...localNamedRecords]),
+        );
+        await persistSavedMatchRecords(nextRecords);
+        return nextRecords;
+    } catch (error) {
+        console.error('Failed to read saved matches from backend, using local cache.', error);
+        return sortSavedMatchRecords(localRecords);
     }
-
-    if (typeof window === 'undefined') {
-        return [];
-    }
-
-    const legacySnapshot = normalizeSavedMatch(window.localStorage.getItem(SAVED_MATCH_STORAGE_KEY));
-    if (!legacySnapshot) {
-        return [];
-    }
-
-    return [
-        {
-            id: AUTO_SAVE_RECORD_ID,
-            name: 'Auto Save',
-            updatedAt: legacySnapshot.savedAt,
-            isAutoSave: true,
-            snapshot: {
-                ...legacySnapshot,
-                saveName: legacySnapshot.saveName || 'Auto Save',
-            },
-        },
-    ];
 };
 
-export const saveNamedMatchRecord = (snapshot, name = '') => {
+export const saveNamedMatchRecord = async (snapshot, name = '', options = {}) => {
     if (typeof window === 'undefined') {
         return null;
     }
@@ -394,24 +500,45 @@ export const saveNamedMatchRecord = (snapshot, name = '') => {
         throw new Error('Invalid saved match snapshot');
     }
 
-    const record = normalizeSavedMatchRecord({
-        id: createRecordId(),
-        name,
-        updatedAt: new Date().toISOString(),
-        isAutoSave: false,
-        snapshot: normalizedSnapshot,
-    });
+    const source = options.source === 'imported' ? 'imported' : 'manual';
+    let record;
 
-    const existingRecords = readSavedMatchRecordsFromStorage().filter((savedRecord) => savedRecord.id !== record.id);
-    const nextRecords = sortSavedMatchRecords([record, ...existingRecords]);
+    try {
+        const apiRecord = await createSavedMatchRecordOnApi({
+            name,
+            snapshot: normalizedSnapshot,
+            source,
+        });
+        record = normalizeSavedMatchRecord({
+            ...apiRecord,
+            storageLocation: BACKEND_SAVE_STORAGE,
+        });
 
-    writeStoredRecords(nextRecords);
+        if (!record) {
+            throw new Error('Backend save response was invalid.');
+        }
+    } catch (error) {
+        console.error('Failed to save named match to backend, keeping a local copy.', error);
+        record = normalizeSavedMatchRecord({
+            id: createRecordId(),
+            name,
+            updatedAt: new Date().toISOString(),
+            isAutoSave: false,
+            storageLocation: LOCAL_SAVE_STORAGE,
+            snapshot: normalizedSnapshot,
+        });
+    }
+
+    const existingRecords = (await readLocalSavedMatchRecords()).filter((savedRecord) => savedRecord.id !== record.id);
+    const nextRecords = sortSavedMatchRecords(dedupeSavedMatchRecords([record, ...existingRecords]));
+
+    await persistSavedMatchRecords(nextRecords);
     saveMatchToStorage(record.snapshot);
 
     return record;
 };
 
-export const upsertAutoSaveRecord = (snapshot) => {
+export const upsertAutoSaveRecord = async (snapshot) => {
     if (typeof window === 'undefined') {
         return null;
     }
@@ -436,22 +563,29 @@ export const upsertAutoSaveRecord = (snapshot) => {
         snapshot: normalizedSnapshot,
     });
 
-    const existingRecords = readSavedMatchRecordsFromStorage().filter((savedRecord) => savedRecord.id !== AUTO_SAVE_RECORD_ID);
+    const existingRecords = (await readLocalSavedMatchRecords()).filter((savedRecord) => savedRecord.id !== AUTO_SAVE_RECORD_ID);
     const nextRecords = sortSavedMatchRecords([record, ...existingRecords]);
 
-    writeStoredRecords(nextRecords);
+    await persistSavedMatchRecords(nextRecords);
     saveMatchToStorage(record.snapshot);
 
     return record;
 };
 
-export const deleteSavedMatchRecord = (recordId) => {
+export const deleteSavedMatchRecord = async (recordId) => {
     if (typeof window === 'undefined') {
         return [];
     }
 
-    const nextRecords = readSavedMatchRecordsFromStorage().filter((savedRecord) => savedRecord.id !== recordId);
-    writeStoredRecords(nextRecords);
+    const existingRecords = await readSavedMatchRecordsFromStorage();
+    const targetRecord = existingRecords.find((savedRecord) => savedRecord.id === recordId);
+
+    if (targetRecord?.storageLocation === BACKEND_SAVE_STORAGE) {
+        await deleteSavedMatchRecordOnApi(recordId);
+    }
+
+    const nextRecords = existingRecords.filter((savedRecord) => savedRecord.id !== recordId);
+    await persistSavedMatchRecords(nextRecords);
 
     if (nextRecords.length) {
         saveMatchToStorage(nextRecords[0].snapshot);
@@ -460,6 +594,112 @@ export const deleteSavedMatchRecord = (recordId) => {
     }
 
     return nextRecords;
+};
+
+export const renameSavedMatchRecord = async (recordId, nextName) => {
+    if (typeof window === 'undefined') {
+        return [];
+    }
+
+    const trimmedName = typeof nextName === 'string' ? nextName.trim() : '';
+    const existingRecords = await readSavedMatchRecordsFromStorage();
+    const targetRecord = existingRecords.find((savedRecord) => savedRecord.id === recordId);
+
+    if (!targetRecord) {
+        return existingRecords;
+    }
+
+    let updatedRecord = {
+        ...targetRecord,
+        name: trimmedName || targetRecord.name,
+        snapshot: {
+            ...targetRecord.snapshot,
+            saveName: trimmedName || targetRecord.name,
+        },
+    };
+
+    if (targetRecord.storageLocation === BACKEND_SAVE_STORAGE) {
+        const apiRecord = await updateSavedMatchRecordOnApi(recordId, {
+            name: trimmedName || targetRecord.name,
+        });
+        updatedRecord = normalizeSavedMatchRecord({
+            ...apiRecord,
+            storageLocation: BACKEND_SAVE_STORAGE,
+        });
+
+        if (!updatedRecord) {
+            throw new Error('Backend rename response was invalid.');
+        }
+    }
+
+    const nextRecords = existingRecords.map((savedRecord) => (savedRecord.id === recordId ? updatedRecord : savedRecord));
+
+    await persistSavedMatchRecords(nextRecords);
+
+    if (nextRecords.length) {
+        saveMatchToStorage(nextRecords[0].snapshot);
+    }
+
+    return nextRecords;
+};
+
+export const overwriteSavedMatchRecord = async (recordId, snapshot, options = {}) => {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    const existingRecords = await readSavedMatchRecordsFromStorage();
+    const targetRecord = existingRecords.find((savedRecord) => savedRecord.id === recordId);
+
+    if (!targetRecord || targetRecord.isAutoSave) {
+        throw new Error('Saved match not found.');
+    }
+
+    const baseSnapshot = normalizeSavedMatch(snapshot);
+    const resolvedName =
+        typeof options.name === 'string' && options.name.trim() ? options.name.trim() : targetRecord.name;
+    const normalizedSnapshot = baseSnapshot
+        ? {
+              ...baseSnapshot,
+              saveName: resolvedName,
+          }
+        : null;
+
+    if (!normalizedSnapshot) {
+        throw new Error('Invalid saved match snapshot');
+    }
+
+    let updatedRecord = normalizeSavedMatchRecord({
+        ...targetRecord,
+        name: resolvedName,
+        updatedAt: new Date().toISOString(),
+        snapshot: normalizedSnapshot,
+    });
+
+    if (targetRecord.storageLocation === BACKEND_SAVE_STORAGE) {
+        const apiRecord = await updateSavedMatchRecordOnApi(recordId, {
+            name: resolvedName,
+            snapshot: normalizedSnapshot,
+        });
+
+        updatedRecord = normalizeSavedMatchRecord({
+            ...apiRecord,
+            storageLocation: BACKEND_SAVE_STORAGE,
+        });
+
+        if (!updatedRecord) {
+            throw new Error('Backend overwrite response was invalid.');
+        }
+    }
+
+    const nextRecords = sortSavedMatchRecords(
+        existingRecords.map((savedRecord) => (savedRecord.id === recordId ? updatedRecord : savedRecord)),
+    );
+
+    await persistSavedMatchRecords(nextRecords);
+    saveMatchToStorage(updatedRecord.snapshot);
+
+    return updatedRecord;
 };
 
 export const queueResumeMatch = (snapshot) => {

@@ -10,6 +10,7 @@ import {
     normalizeSavedMatch,
     queueResumeMatch,
     readSavedMatchRecordsFromStorage,
+    renameSavedMatchRecord,
     saveNamedMatchRecord,
 } from './savedMatch';
 
@@ -20,13 +21,20 @@ function Landing() {
     const [matchType, setMatchType] = useState('oneday');
     const [savedMatchRecords, setSavedMatchRecords] = useState([]);
     const [resumeError, setResumeError] = useState(null);
+    const [editingSaveId, setEditingSaveId] = useState(null);
+    const [renameDraft, setRenameDraft] = useState('');
 
     const [, dispatch] = useStateValue();
     const [isTossed, setIsTossed] = useState(false);
     const history = useHistory();
 
-    const refreshSavedMatches = () => {
-        setSavedMatchRecords(readSavedMatchRecordsFromStorage());
+    const refreshSavedMatches = async () => {
+        try {
+            setSavedMatchRecords(await readSavedMatchRecordsFromStorage());
+        } catch (error) {
+            console.error('Failed to load saved matches', error);
+            setResumeError('Could not load saved matches right now.');
+        }
     };
 
     useEffect(() => {
@@ -57,10 +65,8 @@ function Landing() {
     };
 
     const handleResumeLatestSave = () => {
-        const latestSavedRecord = readSavedMatchRecordsFromStorage()[0];
-
         if (!latestSavedRecord) {
-            setResumeError('No browser save found yet. Import a JSON save instead.');
+            setResumeError('No saved match found yet. Import a JSON save instead.');
             return;
         }
 
@@ -71,9 +77,33 @@ function Landing() {
         resumeSavedMatch(savedRecord.snapshot);
     };
 
-    const handleDeleteSavedRecord = (recordId) => {
-        const nextRecords = deleteSavedMatchRecord(recordId);
-        setSavedMatchRecords(nextRecords);
+    const handleDeleteSavedRecord = async (recordId) => {
+        try {
+            const nextRecords = await deleteSavedMatchRecord(recordId);
+            setSavedMatchRecords(nextRecords);
+            setResumeError(null);
+        } catch (error) {
+            console.error('Failed to delete saved match', error);
+            setResumeError('Could not delete that saved match.');
+        }
+    };
+
+    const startRenamingSavedRecord = (savedRecord) => {
+        setEditingSaveId(savedRecord.id);
+        setRenameDraft(savedRecord.name);
+    };
+
+    const handleRenameSavedRecord = async (recordId) => {
+        try {
+            const nextRecords = await renameSavedMatchRecord(recordId, renameDraft);
+            setSavedMatchRecords(nextRecords);
+            setEditingSaveId(null);
+            setRenameDraft('');
+            setResumeError(null);
+        } catch (error) {
+            console.error('Failed to rename saved match', error);
+            setResumeError('Could not rename that saved match.');
+        }
     };
 
     const handleImportSavedMatch = async (event) => {
@@ -93,8 +123,9 @@ function Landing() {
 
             const importedSaveName =
                 savedMatch.saveName || selectedFile.name.replace(/\.json$/i, '').replace(/[-_]+/g, ' ');
-            const savedRecord = saveNamedMatchRecord(savedMatch, importedSaveName);
-            refreshSavedMatches();
+            const savedRecord = await saveNamedMatchRecord(savedMatch, importedSaveName, { source: 'imported' });
+            await refreshSavedMatches();
+            setResumeError(null);
             resumeSavedMatch(savedRecord.snapshot);
         } catch (error) {
             console.error('Failed to import saved match', error);
@@ -205,10 +236,15 @@ function Landing() {
                                 <div className="mt-1">
                                     Saved: {new Date(latestSavedRecord.updatedAt).toLocaleString()}
                                 </div>
+                                {!latestSavedRecord.isAutoSave && (
+                                    <div className="mt-1 text-xs font-semibold uppercase tracking-wide">
+                                        {latestSavedRecord.storageLocation === 'backend' ? 'Synced to backend' : 'Saved in browser only'}
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="bg-gray-100 dark:bg-gray-700/60 border border-dashed border-gray-300 dark:border-gray-500 rounded-2xl px-4 py-4 text-sm text-gray-600 dark:text-gray-300 mb-4 text-center">
-                                No browser save found yet. Import a saved JSON file to continue a match.
+                                No saved match found yet. Import a saved JSON file to continue a match.
                             </div>
                         )}
 
@@ -247,6 +283,9 @@ function Landing() {
                                         Innings {autoSaveRecord.snapshot.appState.innings} | Score {autoSaveRecord.snapshot.appState.score}/{autoSaveRecord.snapshot.appState.wickets} | Updated{' '}
                                         {new Date(autoSaveRecord.updatedAt).toLocaleString()}
                                     </div>
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300 mt-1">
+                                        Browser only
+                                    </div>
                                     <div className="mt-3 flex justify-end">
                                         <button
                                             type="button"
@@ -284,6 +323,9 @@ function Landing() {
                                                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                                         Updated {new Date(savedRecord.updatedAt).toLocaleString()}
                                                     </div>
+                                                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mt-1">
+                                                        {savedRecord.storageLocation === 'backend' ? 'Synced to backend' : 'Saved in browser only'}
+                                                    </div>
                                                 </div>
                                                 <div className="flex gap-2 sm:justify-end">
                                                     <button
@@ -295,6 +337,13 @@ function Landing() {
                                                     </button>
                                                     <button
                                                         type="button"
+                                                        onClick={() => startRenamingSavedRecord(savedRecord)}
+                                                        className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
+                                                    >
+                                                        Rename
+                                                    </button>
+                                                    <button
+                                                        type="button"
                                                         onClick={() => handleDeleteSavedRecord(savedRecord.id)}
                                                         className="bg-red-500 hover:bg-red-600 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
                                                     >
@@ -302,6 +351,33 @@ function Landing() {
                                                     </button>
                                                 </div>
                                             </div>
+                                            {editingSaveId === savedRecord.id && (
+                                                <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={renameDraft}
+                                                        onChange={(event) => setRenameDraft(event.target.value)}
+                                                        className="flex-1 rounded-xl border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 px-3 py-2 text-sm"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRenameSavedRecord(savedRecord.id)}
+                                                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
+                                                    >
+                                                        Save Name
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setEditingSaveId(null);
+                                                            setRenameDraft('');
+                                                        }}
+                                                        className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-sm font-bold px-4 py-2 rounded-xl shadow"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

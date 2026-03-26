@@ -1,8 +1,66 @@
 /* eslint-disable react/jsx-key */
 /* eslint-disable react/prop-types */
-import React from 'react';
+import React, { useMemo } from 'react';
 import './ScoreCard.css';
-import 'tailwindcss/tailwind.css';
+
+const PlayerCard = React.memo(function PlayerCard({
+    id,
+    score,
+    playerName,
+    icon,
+    bgClass,
+    textClass,
+    borderClass,
+    statusLabel,
+    isStriker,
+}) {
+    return (
+        <div
+            className={`player-card relative bg-gradient-to-r ${bgClass} rounded-xl sm:rounded-2xl p-2 sm:p-4 shadow-lg border-2 ${borderClass} transform hover:scale-105 transition-all duration-300 hover:shadow-2xl`}
+        >
+            <div className="absolute -top-1 -left-1 sm:-top-2 sm:-left-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg">
+                {id + 1}
+            </div>
+
+            <div className="absolute -top-2 -right-2">
+                <div className="bg-white rounded-full p-1 shadow-lg">
+                    <span className="text-lg">{icon}</span>
+                </div>
+            </div>
+
+            <div className="mt-2">
+                <div className={`font-bold text-sm sm:text-base md:text-lg ${textClass} mb-1 truncate`}>
+                    {playerName}
+                </div>
+                <div className={`text-xs sm:text-sm font-semibold ${textClass} opacity-80 mb-1 sm:mb-2`}>
+                    {statusLabel}
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <div className={`text-xl sm:text-2xl md:text-3xl font-black ${textClass}`}>{score}</div>
+
+                    <div className="flex flex-col items-end">
+                        <div className={`text-xs font-bold ${textClass} opacity-70`}>RUNS</div>
+                        {score >= 50 && (
+                            <div className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">
+                                50+
+                            </div>
+                        )}
+                        {score >= 30 && score < 50 && (
+                            <div className="bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">
+                                30+
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {isStriker && (
+                <div className="absolute inset-0 rounded-2xl border-4 border-yellow-300 animate-pulse pointer-events-none"></div>
+            )}
+        </div>
+    );
+});
 
 function ScoreCard({
     scorelist,
@@ -119,6 +177,31 @@ function ScoreCard({
         };
     };
 
+    const playerCards = useMemo(
+        () =>
+            (scorelist || []).map((score, id) => {
+                const playerStatus = getPlayerStatus(id);
+                const playerName = getPlayerName(id);
+                const { icon, bgClass, textClass, borderClass, status: statusLabel } = playerStatus;
+
+                return (
+                    <PlayerCard
+                        key={id}
+                        id={id}
+                        score={score}
+                        playerName={playerName}
+                        icon={icon}
+                        bgClass={bgClass}
+                        textClass={textClass}
+                        borderClass={borderClass}
+                        statusLabel={statusLabel}
+                        isStriker={id === striker}
+                    />
+                );
+            }),
+        [current, firstTeam, innings, players, scorelist, secondTeam, status, striker],
+    );
+
     return (
         <div className="w-full max-w-5xl mx-auto">
             {/* Unified Scorecard Header */}
@@ -230,68 +313,7 @@ function ScoreCard({
 
                     {/* All Players Grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-                        {scorelist && scorelist.map((score, id) => {
-                            const playerStatus = getPlayerStatus(id);
-                            const playerName = getPlayerName(id);
-                            
-                            return (
-                                <div 
-                                    key={id}
-                                    className={`player-card relative bg-gradient-to-r ${playerStatus.bgClass} rounded-xl sm:rounded-2xl p-2 sm:p-4 shadow-lg border-2 ${playerStatus.borderClass} transform hover:scale-105 transition-all duration-300 hover:shadow-2xl`}
-                                >
-                                    {/* Player Number Badge */}
-                                    <div className="absolute -top-1 -left-1 sm:-top-2 sm:-left-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg">
-                                        {id + 1}
-                                    </div>
-                                    
-                                    {/* Status Badge */}
-                                    <div className="absolute -top-2 -right-2">
-                                        <div className="bg-white rounded-full p-1 shadow-lg">
-                                            <span className="text-lg">{playerStatus.icon}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Player Info */}
-                                    <div className="mt-2">
-                                        <div className={`font-bold text-sm sm:text-base md:text-lg ${playerStatus.textClass} mb-1 truncate`}>
-                                            {playerName}
-                                        </div>
-                                        <div className={`text-xs sm:text-sm font-semibold ${playerStatus.textClass} opacity-80 mb-1 sm:mb-2`}>
-                                            {playerStatus.status}
-                                        </div>
-                                        
-                                        {/* Score Display */}
-                                        <div className="flex items-center justify-between">
-                                            <div className={`text-xl sm:text-2xl md:text-3xl font-black ${playerStatus.textClass}`}>
-                                                {score}
-                                            </div>
-                                            
-                                            {/* Performance Indicator */}
-                                            <div className="flex flex-col items-end">
-                                                <div className={`text-xs font-bold ${playerStatus.textClass} opacity-70`}>
-                                                    RUNS
-                                                </div>
-                                                {score >= 50 && (
-                                                    <div className="bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full text-xs font-bold mt-1">
-                                                        50+
-                                                    </div>
-                                                )}
-                                                {score >= 30 && score < 50 && (
-                                                    <div className="bg-green-400 text-green-900 px-2 py-1 rounded-full text-xs font-bold mt-1">
-                                                        30+
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Striker Highlight */}
-                                    {id === striker && (
-                                        <div className="absolute inset-0 rounded-2xl border-4 border-yellow-300 animate-pulse pointer-events-none"></div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                        {playerCards}
                     </div>
 
                     {/* Removed duplicate Team Total Summary cards - info shown in header */}

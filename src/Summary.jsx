@@ -1,12 +1,9 @@
 /* eslint-disable react/jsx-key */
 import React, { useState, useEffect, useRef } from 'react';
 import { useStateValue } from './StateProvider';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import Table from 'react-bootstrap/Table';
 import Header from './Header';
 import ScoreCard from './ScoreCard';
 import axios from './axios';
-import Button from 'react-bootstrap/Button';
 import { Link } from 'react-router-dom';
 
 function Summary() {
@@ -164,8 +161,9 @@ function Summary() {
                         </div>
                     </div>
 
-                    <Table striped={true} bordered={true} hover={true} className="w-full rounded-lg shadow-lg" style={{ fontSize: '16px' }}>
-                        <thead className="thead-dark">
+                    <div className="overflow-x-auto">
+                    <table className="w-full rounded-lg shadow-lg overflow-hidden text-base border border-gray-200 dark:border-gray-600">
+                        <thead className="bg-gray-900 text-white">
                             <tr>
                                 <th scope="col" className="text-center py-3 px-4">#</th>
                                 <th scope="col" className="text-center py-3 px-4">Players</th>
@@ -181,7 +179,7 @@ function Summary() {
                                 return (
                                     <tr key={`team1-${id}`}
                                         className={`
-                                            ${isOut ? 'table-danger' : isCurrentBatsman ? 'table-warning' : 'table-success'}
+                                            ${isOut ? 'bg-red-100 dark:bg-red-900/30' : isCurrentBatsman ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-green-100 dark:bg-green-900/20'}
                                         `}
                                     >
                                         <th scope="row" className={`text-center py-3 px-4 ${isStriker ? 'font-bold text-lg' : 'font-semibold'}`}>
@@ -207,7 +205,8 @@ function Summary() {
                                 <th className="py-3 px-4">{state.team1_data.currentOver || 0}.{state.team1_data.ballInOver || 0}</th>
                             </tr>
                         </tbody>
-                    </Table>
+                    </table>
+                    </div>
                     
                     {/* Fall of Wickets */}
                     {state.team1_data.playerFell?.filter(data => data !== '').length > 0 && (
@@ -243,8 +242,9 @@ function Summary() {
                         </div>
                     </div>
 
-                    <Table striped={true} bordered={true} hover={true} className="w-full rounded-lg shadow-lg" style={{ fontSize: '16px' }}>
-                        <thead className="thead-dark">
+                    <div className="overflow-x-auto">
+                    <table className="w-full rounded-lg shadow-lg overflow-hidden text-base border border-gray-200 dark:border-gray-600">
+                        <thead className="bg-gray-900 text-white">
                             <tr>
                                 <th scope="col" className="text-center py-3 px-4">#</th>
                                 <th scope="col" className="text-center py-3 px-4">Players</th>
@@ -260,7 +260,7 @@ function Summary() {
                                 return (
                                     <tr key={`team2-${id}`}
                                         className={`
-                                            ${isOut ? 'table-danger' : isCurrentBatsman ? 'table-warning' : 'table-success'}
+                                            ${isOut ? 'bg-red-100 dark:bg-red-900/30' : isCurrentBatsman ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-green-100 dark:bg-green-900/20'}
                                         `}
                                     >
                                         <th scope="row" className={`text-center py-3 px-4 ${isStriker ? 'font-bold text-lg' : 'font-semibold'}`}>
@@ -286,7 +286,8 @@ function Summary() {
                                 <th className="py-3 px-4">{state.team2_data.currentOver || 0}.{state.team2_data.ballInOver || 0}</th>
                             </tr>
                         </tbody>
-                    </Table>
+                    </table>
+                    </div>
                     
                     {/* Fall of Wickets */}
                     {state.team2_data.playerFell?.filter(data => data !== '').length > 0 && (
