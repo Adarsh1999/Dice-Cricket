@@ -668,6 +668,7 @@ function App() {
                                         onRoll={scoring}
                                         rollingTime={150}
                                         size={108}
+                                        sound="/audio.mp3"
                                         triggers={isProcessing ? [] : ['click', 'a', 'Enter']}
                                     />
                                 ) : (
