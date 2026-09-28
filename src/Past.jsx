@@ -1,248 +1,129 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { Link, BrowserRouter as Router, Route } from 'react-router-dom';
-import ScoreCard from './ScoreCard';
+import React, { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import axios from './axios';
-import Header from './Header';
+import ScoreCard from './components/match/ScoreCard';
+import Icon from './components/ui/Icon';
+import {
+    formatMatchType,
+    formatResult,
+    formatSavedDate,
+    formatTeamName,
+    getMatchInnings,
+    getTestTarget,
+} from './utils/matchPresentation';
 
 function Past() {
     const [detail, setDetail] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { id } = useParams();
-    
+
     const getMatch = async () => {
         try {
             setLoading(true);
-            const to_send = {
-                id: `${id}`,
-            };
-            const { data } = await axios.post('/history/find', to_send);
-            console.log('API Response:', data);
-            
-            if (data.success) {
-                console.log('Game data:', data.data);
-                console.log('Team1 data structure:', data.data.team1_data);
-                console.log('Team2 data structure:', data.data.team2_data);
-                
-                // Debug player data specifically
-                if (data.data.team1_data) {
-                    console.log('Team1 firstTeam:', data.data.team1_data.firstTeam);
-                    console.log('Team1 secondTeam:', data.data.team1_data.secondTeam);
-                    console.log('Team1 players:', data.data.team1_data.players);
-                }
-                if (data.data.team2_data) {
-                    console.log('Team2 firstTeam:', data.data.team2_data.firstTeam);
-                    console.log('Team2 secondTeam:', data.data.team2_data.secondTeam);
-                    console.log('Team2 players:', data.data.team2_data.players);
-                }
-                
-                setDetail(data.data); // Changed from data[0] to data.data
-            } else {
-                setError('Failed to fetch match details');
+            setError(null);
+            const { data } = await axios.get(`/history/${id}`);
+
+            if (!data.success || !data.data) {
+                throw new Error('Match was not found');
             }
-        } catch (err) {
-            console.error('Failed to fetch match details', err);
-            setError('An error occurred while fetching match details');
+
+            setDetail(data.data);
+        } catch (requestError) {
+            console.error('Failed to fetch match details', requestError);
+            setError('This scorecard could not be loaded from the archive.');
         } finally {
             setLoading(false);
         }
     };
-    
+
     useEffect(() => {
         getMatch();
-    }, [id]); // Added id as dependency
+    }, [id]);
 
-    const isTestMatch = detail?.matchType === 'test' || Boolean(detail?.team1_data2?.scorelist?.length);
-    const testTarget = isTestMatch
-        ? Math.max(1, (detail?.team1_data?.score || 0) + (detail?.team1_data2?.score || 0) - (detail?.team2_data?.score || 0) + 1)
-        : null;
-    const testInnings = isTestMatch
-        ? [
-            { id: 'team1-1', teamName: detail?.team1, data: detail?.team1_data, innings: 1 },
-            { id: 'team2-1', teamName: detail?.team2, data: detail?.team2_data, innings: 2 },
-            { id: 'team1-2', teamName: detail?.team1, data: detail?.team1_data2, innings: 3 },
-            { id: 'team2-2', teamName: detail?.team2, data: detail?.team2_data2, innings: 4 },
-        ]
-        : [];
-    
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-                <Header />
-                <h2 className="mt-4 mb-6 text-center text-gray-700 dark:text-gray-200">Loading...</h2>
-            </div>
+            <main className="app-page">
+                <div className="app-container">
+                    <div className="page-hero"><div className="skeleton" style={{ width: 'min(620px, 100%)', height: 130, borderRadius: 22 }} /></div>
+                    <div className="innings-stack">
+                        <div className="skeleton skeleton-card" />
+                        <div className="skeleton skeleton-card" />
+                    </div>
+                </div>
+            </main>
         );
     }
-    
-    if (error) {
+
+    if (error || !detail) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-                <Header />
-                <h2 className="mt-4 mb-6 text-center text-red-500">{error}</h2>
-            </div>
-        );
-    }
-    
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-            <Header />
-            <div className="flex flex-col items-center mt-6 mb-8">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                    📊 Match History 📊
-                </h2>
-                <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-            </div>
-            <div>
-                {detail ? (
-                    isTestMatch ? (
+            <main className="app-page">
+                <div className="app-container">
+                    <div className="state-panel">
                         <div>
-                            <div className="max-w-5xl mx-auto px-2 sm:px-4 mb-10">
-                                {testInnings.map((inning) => {
-                                    const data = inning.data || {};
-                                    const scorelist = data.scorelist || [];
-                                    const current = data.current || [];
-                                    const status = data.status || [];
-                                    const fallOn = data.fallOn || [];
-                                    const playerFell = data.playerFell || [];
-                                    const playerList = data.players || data.firstTeam || data.secondTeam || [];
-                                    return (
-                                        <div key={inning.id} className="mb-10">
-                                            <ScoreCard
-                                                scorelist={scorelist}
-                                                current={current}
-                                                status={status}
-                                                striker={data.striker}
-                                                firstTeam={data.firstTeam}
-                                                secondTeam={data.secondTeam}
-                                                players={playerList}
-                                                innings={inning.innings}
-                                                battingTeamName={inning.teamName ? inning.teamName.replace('_', ' ') : 'Team'}
-                                                currentOver={data.currentOver}
-                                                ballInOver={data.ballInOver}
-                                                fallOn={fallOn}
-                                                playerFell={playerFell}
-                                                target={inning.innings === 4 ? testTarget : null}
-                                            />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            <div className="flex flex-col items-center mt-8">
-                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl border-2 border-green-300 transform hover:scale-105 transition-all duration-300">
-                                    <h2 className="text-2xl font-bold text-center tracking-wide drop-shadow-lg">
-                                        🏆 {detail.result}
-                                    </h2>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                    <div>
-                        <div className="flex flex-col items-center mb-8">
-                            <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl border-2 border-red-300 mb-3">
-                                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-center tracking-wide drop-shadow-lg">
-                                    🏏 {detail.team1} 🏏
-                                </h1>
-                            </div>
-                            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 px-3 sm:px-4 py-2 rounded-lg shadow-md border border-gray-300 dark:border-gray-500">
-                                <div className="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200">
-                                    📊 Score: <span className="text-blue-600 dark:text-blue-400">{detail.team1_data.score}/{detail.team1_data.wickets}</span> | 
-                                    ⏰ Overs: <span className="text-green-600 dark:text-green-400">{detail.team1_data.currentOver || 0}.{detail.team1_data.ballInOver || 0}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="max-w-5xl mx-auto px-2 sm:px-4 mb-10">
-                            <ScoreCard
-                                scorelist={detail.team1_data.scorelist}
-                                current={detail.team1_data.current}
-                                status={detail.team1_data.status}
-                                striker={detail.team1_data.striker}
-                                firstTeam={detail.team1_data.firstTeam}
-                                secondTeam={detail.team1_data.secondTeam}
-                                players={detail.team1_data.players}
-                                team1Score={detail.team1_data.score}
-                                innings={1}
-                                currentOver={detail.team1_data.currentOver}
-                                ballInOver={detail.team1_data.ballInOver}
-                            />
-                        </div>
-
-                        <div className="flex flex-col items-start w-full max-w-5xl mx-auto px-2 sm:px-4 mb-12">
-                            <div className="text-gray-800 dark:text-gray-200 p-2 mb-2 font-semibold bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                                Fall of Wickets
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {detail.team1_data.playerFell.map((data, id) =>
-                                    data !== '' ? (
-                                        <div key={id} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 text-sm font-semibold">
-                                            <span>{data}</span>
-                                            <span className="text-gray-700 dark:text-gray-300">{detail.team1_data.fallOn[id]}/{id + 1}</span>
-                                        </div>
-                                    ) : null,
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-center mb-8">
-                            <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl border-2 border-blue-300 mb-3">
-                                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-center tracking-wide drop-shadow-lg">
-                                    🏏 {detail.team2} 🏏
-                                </h1>
-                            </div>
-                            <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 px-3 sm:px-4 py-2 rounded-lg shadow-md border border-gray-300 dark:border-gray-500">
-                                <div className="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-200">
-                                    📊 Score: <span className="text-blue-600 dark:text-blue-400">{detail.team2_data.score}/{detail.team2_data.wickets}</span> | 
-                                    ⏰ Overs: <span className="text-green-600 dark:text-green-400">{detail.team2_data.currentOver || 0}.{detail.team2_data.ballInOver || 0}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="max-w-5xl mx-auto px-2 sm:px-4 mb-10">
-                            <ScoreCard
-                                scorelist={detail.team2_data.scorelist}
-                                current={detail.team2_data.current}
-                                status={detail.team2_data.status}
-                                striker={detail.team2_data.striker}
-                                firstTeam={detail.team2_data.firstTeam}
-                                secondTeam={detail.team2_data.secondTeam}
-                                players={detail.team2_data.players}
-                                team1Score={detail.team1_data.score}
-                                innings={2}
-                                team2Score={detail.team2_data.score}
-                                team2wic={detail.team2_data.wickets}
-                                currentOver={detail.team2_data.currentOver}
-                                ballInOver={detail.team2_data.ballInOver}
-                            />
-                        </div>
-                        <div className="flex flex-col items-start w-full max-w-5xl mx-auto px-2 sm:px-4 mb-12">
-                            <div className="text-gray-800 dark:text-gray-200 p-2 mb-2 font-semibold bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                                Fall of Wickets
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {detail.team2_data.playerFell.map((data, id) =>
-                                    data !== '' ? (
-                                        <div key={id} className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 text-sm font-semibold">
-                                            <span>{data}</span>
-                                            <span className="text-gray-700 dark:text-gray-300">{detail.team2_data.fallOn[id]}/{id + 1}</span>
-                                        </div>
-                                    ) : null,
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-center mt-8">
-                            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl border-2 border-green-300 transform hover:scale-105 transition-all duration-300">
-                                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-center tracking-wide drop-shadow-lg">
-                                    🏆 {detail.result} 🏆
-                                </h2>
-                            </div>
+                            <span className="state-panel__icon"><Icon name="history" size={28} /></span>
+                            <h2>Scorecard unavailable</h2>
+                            <p>{error || 'No match details were returned.'}</p>
+                            <Link className="button button--secondary" to="/history"><Icon name="arrowRight" size={16} /> Back to archive</Link>
                         </div>
                     </div>
-                    )
-                ) : (
-                    <h1 className=" w-full h-full m-12 text-center">No match details found</h1>
-                )}
+                </div>
+            </main>
+        );
+    }
+
+    const isTestMatch = detail.matchType === 'test' || (!detail.matchType && Boolean(detail.team1_data2?.scorelist?.length));
+    const inningsRecords = getMatchInnings(detail);
+    const testTarget = isTestMatch ? getTestTarget(detail) : null;
+
+    return (
+        <main className="app-page">
+            <div className="app-container page-enter">
+                <section className="page-hero">
+                    <div>
+                        <span className="eyebrow">Archived scorecard · {formatMatchType(detail.matchType)}</span>
+                        <h1>{formatTeamName(detail.team1)} vs {formatTeamName(detail.team2)}</h1>
+                        <p>Played {formatSavedDate(detail.createdAt || detail.timestamp)} · {inningsRecords.length} innings recorded</p>
+                    </div>
+                    <div className="result-lockup">
+                        <div className="result-lockup__top"><Icon name="trophy" size={19} /> Official result</div>
+                        <h2>{formatResult(detail.result)}</h2>
+                    </div>
+                </section>
+
+                <div className="summary-toolbar">
+                    <div className="summary-toolbar__copy">
+                        <strong>Full batting scorecard</strong>
+                        <span>{isTestMatch ? `Fourth-innings target: ${testTarget}` : `Chase target: ${(detail.team1_data?.score || 0) + 1}`}</span>
+                    </div>
+                    <Link className="button button--ghost" to="/history"><Icon name="history" size={15} /> Back to archive</Link>
+                </div>
+
+                <div className="innings-stack">
+                    {inningsRecords.map((inningRecord) => (
+                        <div className="innings-stack__item" key={inningRecord.id}>
+                            <ScoreCard
+                                ballInOver={inningRecord.data.ballInOver}
+                                battingTeamId={inningRecord.teamName}
+                                battingTeamName={formatTeamName(inningRecord.teamName)}
+                                current={inningRecord.data.current}
+                                currentOver={inningRecord.data.currentOver}
+                                fallOn={inningRecord.data.fallOn}
+                                firstTeam={inningRecord.data.firstTeam}
+                                innings={inningRecord.innings}
+                                playerFell={inningRecord.data.playerFell}
+                                players={inningRecord.data.players}
+                                scorelist={inningRecord.data.scorelist}
+                                secondTeam={inningRecord.data.secondTeam}
+                                status={inningRecord.data.status}
+                                striker={inningRecord.data.striker}
+                                target={inningRecord.innings === 4 ? testTarget : !isTestMatch && inningRecord.innings === 2 ? (detail.team1_data?.score || 0) + 1 : null}
+                            />
+                        </div>
+                    ))}
+                </div>
             </div>
-        </div>
+        </main>
     );
 }
 

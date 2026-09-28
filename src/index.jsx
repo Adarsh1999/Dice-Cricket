@@ -1,9 +1,11 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './assets/css/main.css';
+import './styles/theme.css';
 import App from './App';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-import Header from './Header';
+import AppHeader from './components/layout/AppHeader';
+import ScrollToTop from './components/layout/ScrollToTop';
 import Landing from './Landing';
 import Summary from './Summary';
 import { StateProvider } from './StateProvider';
@@ -15,9 +17,10 @@ root.render(
     <React.StrictMode>
         <StateProvider initialState={initialState} reducer={reducer}>
             <Router>
+                <ScrollToTop />
+                <AppHeader />
                 <Switch>
                     <Route exact path="/">
-                        <Header />
                         <Landing />
                     </Route>
                     <Route path="/match" component={App} />

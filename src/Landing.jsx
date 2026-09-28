@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
-import Teams from './Teams';
-import CoinToss from './CoinToss';
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 import { useStateValue } from './StateProvider';
-import cx from 'classnames';
+import CoinToss from './components/setup/CoinToss';
+import FormatToggle from './components/setup/FormatToggle';
+import TeamSelector from './components/setup/TeamSelector';
+import Icon from './components/ui/Icon';
+import TeamMark from './components/ui/TeamMark';
+import { formatMatchType, formatSavedDate, formatTeamName } from './utils/matchPresentation';
 import {
     deleteSavedMatchRecord,
     normalizeSavedMatch,
@@ -16,16 +18,15 @@ import {
 
 function Landing() {
     const [team1Selected, setTeam1Selected] = useState('');
-    const [times, setTimes] = useState(1);
     const [team2Selected, setTeam2Selected] = useState('');
     const [matchType, setMatchType] = useState('oneday');
+    const [isTossed, setIsTossed] = useState(false);
     const [savedMatchRecords, setSavedMatchRecords] = useState([]);
     const [resumeError, setResumeError] = useState(null);
     const [editingSaveId, setEditingSaveId] = useState(null);
     const [renameDraft, setRenameDraft] = useState('');
-
+    const [showSavedLibrary, setShowSavedLibrary] = useState(false);
     const [, dispatch] = useStateValue();
-    const [isTossed, setIsTossed] = useState(false);
     const history = useHistory();
 
     const refreshSavedMatches = async () => {
@@ -33,7 +34,7 @@ function Landing() {
             setSavedMatchRecords(await readSavedMatchRecordsFromStorage());
         } catch (error) {
             console.error('Failed to load saved matches', error);
-            setResumeError('Could not load saved matches right now.');
+            setResumeError('Saved matches are temporarily unavailable. You can still start a new match.');
         }
     };
 
@@ -41,7 +42,42 @@ function Landing() {
         refreshSavedMatches();
     }, []);
 
-    const login = () => {
+    const latestSavedRecord = savedMatchRecords[0] || null;
+    const canStartMatch = Boolean(team1Selected && team2Selected && isTossed);
+    const completedSteps = 1 + Number(Boolean(team1Selected && team2Selected)) + Number(isTossed);
+
+    const handleFormatChange = (nextMatchType) => {
+        setMatchType(nextMatchType);
+        setIsTossed(false);
+    };
+
+    const handleTeamSelect = (teamId) => {
+        setIsTossed(false);
+
+        if (teamId === team1Selected) {
+            setTeam1Selected(team2Selected);
+            setTeam2Selected('');
+            return;
+        }
+
+        if (teamId === team2Selected) {
+            setTeam2Selected('');
+            return;
+        }
+
+        if (!team1Selected) {
+            setTeam1Selected(teamId);
+            return;
+        }
+
+        setTeam2Selected(teamId);
+    };
+
+    const startMatch = () => {
+        if (!canStartMatch) {
+            return;
+        }
+
         dispatch({
             type: 'SET_TEAM',
             team1: team1Selected,
@@ -49,8 +85,9 @@ function Landing() {
         });
         dispatch({
             type: 'SET_MATCH_TYPE',
-            matchType: matchType,
+            matchType,
         });
+        history.push('/match');
     };
 
     const resumeSavedMatch = (savedMatch) => {
@@ -60,31 +97,26 @@ function Landing() {
             history.push('/match');
         } catch (error) {
             console.error('Failed to queue saved match', error);
-            setResumeError('Could not restore that saved match.');
+            setResumeError('That save could not be restored. Try importing its JSON file again.');
         }
     };
 
     const handleResumeLatestSave = () => {
         if (!latestSavedRecord) {
-            setResumeError('No saved match found yet. Import a JSON save instead.');
+            setResumeError('No saved match exists yet. Import a JSON save or start a new match.');
             return;
         }
 
         resumeSavedMatch(latestSavedRecord.snapshot);
     };
 
-    const handleResumeSavedRecord = (savedRecord) => {
-        resumeSavedMatch(savedRecord.snapshot);
-    };
-
     const handleDeleteSavedRecord = async (recordId) => {
         try {
-            const nextRecords = await deleteSavedMatchRecord(recordId);
-            setSavedMatchRecords(nextRecords);
+            setSavedMatchRecords(await deleteSavedMatchRecord(recordId));
             setResumeError(null);
         } catch (error) {
             console.error('Failed to delete saved match', error);
-            setResumeError('Could not delete that saved match.');
+            setResumeError('That save could not be deleted right now.');
         }
     };
 
@@ -95,14 +127,13 @@ function Landing() {
 
     const handleRenameSavedRecord = async (recordId) => {
         try {
-            const nextRecords = await renameSavedMatchRecord(recordId, renameDraft);
-            setSavedMatchRecords(nextRecords);
+            setSavedMatchRecords(await renameSavedMatchRecord(recordId, renameDraft));
             setEditingSaveId(null);
             setRenameDraft('');
             setResumeError(null);
         } catch (error) {
             console.error('Failed to rename saved match', error);
-            setResumeError('Could not rename that saved match.');
+            setResumeError('That save could not be renamed right now.');
         }
     };
 
@@ -114,8 +145,7 @@ function Landing() {
         }
 
         try {
-            const fileContents = await selectedFile.text();
-            const savedMatch = normalizeSavedMatch(fileContents);
+            const savedMatch = normalizeSavedMatch(await selectedFile.text());
 
             if (!savedMatch) {
                 throw new Error('Invalid saved match file');
@@ -129,348 +159,223 @@ function Landing() {
             resumeSavedMatch(savedRecord.snapshot);
         } catch (error) {
             console.error('Failed to import saved match', error);
-            setResumeError('Selected file is not a valid Dice Cricket save.');
+            setResumeError('The selected file is not a valid Dice Cricket save.');
         } finally {
             event.target.value = '';
         }
     };
 
-    const latestSavedRecord = savedMatchRecords[0] || null;
-    const autoSaveRecord = savedMatchRecords.find((savedRecord) => savedRecord.isAutoSave) || null;
-    const manualSavedRecords = savedMatchRecords.filter((savedRecord) => !savedRecord.isAutoSave);
-
     return (
-        <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col items-center">
-            <div className="max-w-6xl w-full p-4 sm:p-6 md:p-8 m-auto">
-                <div className="text-center mb-4">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4 sm:mb-6 leading-tight">
-                        🏏 Welcome to Dice Cricket! 🎲
+        <main className="app-page">
+            <section className="app-container landing-hero page-enter">
+                <div className="hero-copy">
+                    <span className="eyebrow">The cricket simulator, reimagined</span>
+                    <h1>
+                        Every roll writes <span>the next headline.</span>
                     </h1>
-                    <div className="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-8"></div>
-                    <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 font-medium">Choose your teams and let the dice decide your destiny!</p>
-                </div>
-                <div className="flex flex-col items-center mb-8">
-                    <div className="text-lg font-semibold text-gray-700 dark:text-gray-200">Match Format</div>
-                    <div className="flex flex-wrap justify-center gap-4 mt-4">
-                        <button
-                            type="button"
-                            onClick={() => setMatchType('oneday')}
-                            className={cx(
-                                'px-6 py-3 rounded-2xl text-lg font-bold border-2 shadow-lg transform hover:scale-105 transition-all duration-300',
-                                matchType === 'oneday'
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border-green-300'
-                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600',
-                            )}
-                        >
-                            One Day
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setMatchType('test')}
-                            className={cx(
-                                'px-6 py-3 rounded-2xl text-lg font-bold border-2 shadow-lg transform hover:scale-105 transition-all duration-300',
-                                matchType === 'test'
-                                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-blue-300'
-                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600',
-                            )}
-                        >
-                            Test
-                        </button>
+                    <p>
+                        Build a matchup, win the toss, and play every delivery with a dice-powered scoring engine.
+                        Choose a fast One Day chase or a four-innings Test battle with live lead, trail, and target tracking.
+                    </p>
+
+                    <div className="hero-proof">
+                        <span className="hero-proof__item"><Icon name="zap" size={15} /> Instant scoring</span>
+                        <span className="hero-proof__item"><Icon name="shield" size={15} /> Four-innings Tests</span>
+                        <span className="hero-proof__item"><Icon name="cloud" size={15} /> Auto-save recovery</span>
+                    </div>
+
+                    <div className="broadcast-preview" aria-label="Scoreboard preview">
+                        <div className="broadcast-preview__top">
+                            <span className="status-pill status-pill--live">Live match centre</span>
+                            <Icon name="dice" size={23} />
+                        </div>
+                        <div className="broadcast-preview__score">
+                            <strong>184<span>/6</span></strong>
+                            <p>Fourth innings<br />Need 27 to win</p>
+                        </div>
+                        <div className="broadcast-preview__footer">
+                            <span>Current partnership</span>
+                            <strong>48 runs · 7.2 overs</strong>
+                        </div>
                     </div>
                 </div>
-            <Teams
-                setTeam1Selected={setTeam1Selected}
-                setTeam2Selected={setTeam2Selected}
-                setTimes={setTimes}
-                team1Selected={team1Selected}
-                times={times}
-                team2Selected={team2Selected}
-            />
 
-            <CoinToss
-                setTeam1Selected={setTeam1Selected}
-                setTeam2Selected={setTeam2Selected}
-                team1Selected={team1Selected}
-                team2Selected={team2Selected}
-                isTossed={isTossed}
-                setIsTossed={setIsTossed}
-            />
-                <div className="flex justify-center mt-12">
-                    <Link
-                        to={{
-                            pathname: '/match',
-                        }}
-                    >
-                        <button
-                            onClick={login}
-                            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-8 rounded-2xl shadow-2xl border-2 border-green-300 transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 text-xl"
-                        >
-                            🚀 Let's Play Match! 🏏
+                <div className="setup-card">
+                    <div className="setup-card__header">
+                        <div>
+                            <span className="eyebrow">New fixture</span>
+                            <h2>Build your match</h2>
+                        </div>
+                        <span className="setup-card__status">
+                            <Icon name={completedSteps === 3 ? 'check' : 'spark'} size={14} />
+                            {completedSteps}/3 ready
+                        </span>
+                    </div>
+
+                    <div className="setup-section">
+                        <div className="setup-section__label">
+                            <strong>1. Choose the format</strong>
+                            <span>{matchType === 'test' ? 'Four innings' : 'Two innings'}</span>
+                        </div>
+                        <FormatToggle onChange={handleFormatChange} value={matchType} />
+                    </div>
+
+                    <div className="setup-section">
+                        <div className="setup-section__label">
+                            <strong>2. Select two squads</strong>
+                            <span>{team1Selected && team2Selected ? 'Matchup locked' : 'Tap a team to select'}</span>
+                        </div>
+                        <TeamSelector onSelect={handleTeamSelect} team1={team1Selected} team2={team2Selected} />
+
+                        <div className="matchup-selection">
+                            <div className={`selection-slot ${team1Selected ? 'selection-slot--filled' : ''}`}>
+                                {team1Selected ? <TeamMark size="small" teamId={team1Selected} showName /> : 'Choose Team 1'}
+                            </div>
+                            <span className="versus-chip">VS</span>
+                            <div className={`selection-slot ${team2Selected ? 'selection-slot--filled' : ''}`}>
+                                {team2Selected ? <TeamMark size="small" teamId={team2Selected} showName /> : 'Choose Team 2'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="setup-section">
+                        <CoinToss
+                            isTossed={isTossed}
+                            setIsTossed={setIsTossed}
+                            setTeam1Selected={setTeam1Selected}
+                            setTeam2Selected={setTeam2Selected}
+                            team1Selected={team1Selected}
+                            team2Selected={team2Selected}
+                        />
+                    </div>
+
+                    <div className="setup-submit">
+                        <button className="button button--primary button--wide" disabled={!canStartMatch} onClick={startMatch} type="button">
+                            <Icon name="play" size={18} /> Start {formatMatchType(matchType)}
+                            <Icon name="arrowRight" size={17} />
                         </button>
-                    </Link>
+                        <span className="setup-submit__note">
+                            {canStartMatch ? `${formatTeamName(team1Selected)} bats first` : 'Complete the toss to unlock the match'}
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <section className="app-container landing-content">
+                <div className="feature-grid">
+                    <article className="feature-card">
+                        <span className="feature-card__icon"><Icon name="dice" size={20} /></span>
+                        <h3>Roll-first gameplay</h3>
+                        <p>Click the dice or use the keyboard. Every roll updates the score, strike, wickets, and over automatically.</p>
+                    </article>
+                    <article className="feature-card">
+                        <span className="feature-card__icon"><Icon name="target" size={20} /></span>
+                        <h3>Match-aware pressure</h3>
+                        <p>Targets, runs required, current partnerships, and Test-match lead or trail states stay visible at a glance.</p>
+                    </article>
+                    <article className="feature-card">
+                        <span className="feature-card__icon"><Icon name="history" size={20} /></span>
+                        <h3>Never lose the story</h3>
+                        <p>Continue an auto-save, create named checkpoints, export JSON snapshots, and archive completed matches.</p>
+                    </article>
                 </div>
 
-                <div className="max-w-3xl mx-auto mt-8">
-                    <div className="bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-3xl shadow-xl p-6">
-                        <div className="text-center mb-4">
-                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Resume Saved Match</h2>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                                Continue the latest auto-save, choose a named save, or import a previously downloaded JSON snapshot.
-                            </p>
+                <section className="saved-section" id="saved-matches">
+                    <div className="section-heading">
+                        <div>
+                            <span className="eyebrow">Continue playing</span>
+                            <h2>Saved match desk</h2>
+                            <p>Resume your latest checkpoint or import a match snapshot from another browser.</p>
                         </div>
+                        <div className="saved-section__actions">
+                            <label className="button button--secondary">
+                                <Icon name="upload" size={15} /> Import JSON
+                                <input accept=".json,application/json" hidden onChange={handleImportSavedMatch} type="file" />
+                            </label>
+                            <Link className="button button--ghost" to="/history">
+                                <Icon name="history" size={15} /> Match archive
+                            </Link>
+                        </div>
+                    </div>
 
-                        {latestSavedRecord ? (
-                            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200 dark:border-amber-700 rounded-2xl px-4 py-4 text-sm text-gray-700 dark:text-gray-200 mb-4">
-                                <div className="font-bold text-base text-amber-800 dark:text-amber-300">
-                                    Latest Save: {latestSavedRecord.name}
-                                </div>
-                                <div className="mt-1">
-                                    {latestSavedRecord.snapshot.state.team1?.replace('_', ' ')} vs{' '}
-                                    {latestSavedRecord.snapshot.state.team2?.replace('_', ' ')}
-                                </div>
-                                <div className="mt-1">
-                                    Format: {latestSavedRecord.snapshot.state.matchType === 'test' ? 'Test' : 'One Day'} | Innings:{' '}
-                                    {latestSavedRecord.snapshot.appState.innings} | Score: {latestSavedRecord.snapshot.appState.score}/
-                                    {latestSavedRecord.snapshot.appState.wickets}
-                                </div>
-                                <div className="mt-1">
-                                    Saved: {new Date(latestSavedRecord.updatedAt).toLocaleString()}
-                                </div>
-                                {!latestSavedRecord.isAutoSave && (
-                                    <div className="mt-1 text-xs font-semibold uppercase tracking-wide">
-                                        {latestSavedRecord.storageLocation === 'backend' ? 'Synced to backend' : 'Saved in browser only'}
-                                    </div>
-                                )}
+                    {latestSavedRecord ? (
+                        <div className="saved-latest">
+                            <TeamMark size="medium" teamId={latestSavedRecord.snapshot.state.team1} />
+                            <div className="saved-latest__copy">
+                                <strong>{latestSavedRecord.name}</strong>
+                                <span>
+                                    {formatTeamName(latestSavedRecord.snapshot.state.team1)} vs {formatTeamName(latestSavedRecord.snapshot.state.team2)} ·{' '}
+                                    {formatMatchType(latestSavedRecord.snapshot.state.matchType)} · Innings {latestSavedRecord.snapshot.appState.innings}
+                                </span>
+                                <span>
+                                    {latestSavedRecord.snapshot.appState.score}/{latestSavedRecord.snapshot.appState.wickets} · Updated {formatSavedDate(latestSavedRecord.updatedAt)}
+                                </span>
                             </div>
-                        ) : (
-                            <div className="bg-gray-100 dark:bg-gray-700/60 border border-dashed border-gray-300 dark:border-gray-500 rounded-2xl px-4 py-4 text-sm text-gray-600 dark:text-gray-300 mb-4 text-center">
-                                No saved match found yet. Import a saved JSON file to continue a match.
-                            </div>
-                        )}
+                            <button className="button button--dark" onClick={handleResumeLatestSave} type="button">
+                                <Icon name="play" size={15} /> Resume latest
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="empty-inline">No saved fixtures yet. Start a match and the first auto-save will appear here.</div>
+                    )}
 
-                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                            <button
-                                type="button"
-                                onClick={handleResumeLatestSave}
-                                className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300"
-                            >
-                                🔁 Resume Latest Save
+                    {resumeError && (
+                        <div className="inline-notice" role="alert">
+                            <Icon name="x" size={15} /> {resumeError}
+                        </div>
+                    )}
+
+                    {savedMatchRecords.length > 0 && (
+                        <div className="saved-library">
+                            <button className="saved-library__toggle" onClick={() => setShowSavedLibrary((isOpen) => !isOpen)} type="button">
+                                <span>All saved matches ({savedMatchRecords.length})</span>
+                                <Icon name="chevronDown" size={16} />
                             </button>
 
-                            <label className="bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition-all duration-300 cursor-pointer text-center">
-                                📂 Import Save JSON
-                                <input type="file" accept=".json,application/json" className="hidden" onChange={handleImportSavedMatch} />
-                            </label>
-                        </div>
-
-                        {resumeError && (
-                            <div className="mt-4 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-200 rounded-2xl px-4 py-3 text-sm font-semibold text-center">
-                                {resumeError}
-                            </div>
-                        )}
-
-                        {autoSaveRecord && (
-                            <div className="mt-5">
-                                <div className="text-sm font-bold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-2">
-                                    Auto Save
-                                </div>
-                                <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-700 rounded-2xl px-4 py-4">
-                                    <div className="font-bold text-sky-800 dark:text-sky-300">{autoSaveRecord.name}</div>
-                                    <div className="text-sm text-gray-700 dark:text-gray-200 mt-1">
-                                        {autoSaveRecord.snapshot.state.team1?.replace('_', ' ')} vs {autoSaveRecord.snapshot.state.team2?.replace('_', ' ')}
-                                    </div>
-                                    <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                                        Innings {autoSaveRecord.snapshot.appState.innings} | Score {autoSaveRecord.snapshot.appState.score}/{autoSaveRecord.snapshot.appState.wickets} | Updated{' '}
-                                        {new Date(autoSaveRecord.updatedAt).toLocaleString()}
-                                    </div>
-                                    <div className="text-xs font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300 mt-1">
-                                        Browser only
-                                    </div>
-                                    <div className="mt-3 flex justify-end">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleResumeSavedRecord(autoSaveRecord)}
-                                            className="bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
-                                        >
-                                            Resume
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {manualSavedRecords.length > 0 && (
-                            <div className="mt-5">
-                                <div className="text-sm font-bold uppercase tracking-wide text-gray-500 dark:text-gray-300 mb-2">
-                                    Named Saves
-                                </div>
-                                <div className="space-y-3">
-                                    {manualSavedRecords.map((savedRecord) => (
-                                        <div
-                                            key={savedRecord.id}
-                                            className="bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-600 rounded-2xl px-4 py-4 shadow-sm"
-                                        >
-                                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                                                <div>
-                                                    <div className="font-bold text-gray-800 dark:text-gray-100">{savedRecord.name}</div>
-                                                    <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                                                        {savedRecord.snapshot.state.team1?.replace('_', ' ')} vs {savedRecord.snapshot.state.team2?.replace('_', ' ')}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                        {savedRecord.snapshot.state.matchType === 'test' ? 'Test' : 'One Day'} | Innings {savedRecord.snapshot.appState.innings} | Score{' '}
-                                                        {savedRecord.snapshot.appState.score}/{savedRecord.snapshot.appState.wickets}
-                                                    </div>
-                                                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                                        Updated {new Date(savedRecord.updatedAt).toLocaleString()}
-                                                    </div>
-                                                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mt-1">
-                                                        {savedRecord.storageLocation === 'backend' ? 'Synced to backend' : 'Saved in browser only'}
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-2 sm:justify-end">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleResumeSavedRecord(savedRecord)}
-                                                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
-                                                    >
-                                                        Resume
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => startRenamingSavedRecord(savedRecord)}
-                                                        className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
-                                                    >
-                                                        Rename
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDeleteSavedRecord(savedRecord.id)}
-                                                        className="bg-red-500 hover:bg-red-600 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
+                            {showSavedLibrary && (
+                                <div className="saved-list">
+                                    {savedMatchRecords.map((savedRecord) => (
+                                        <div className="saved-record" key={savedRecord.id}>
+                                            <div className="saved-record__copy">
+                                                <strong>{savedRecord.name}{savedRecord.isAutoSave ? ' · Auto save' : ''}</strong>
+                                                <span>
+                                                    {formatTeamName(savedRecord.snapshot.state.team1)} vs {formatTeamName(savedRecord.snapshot.state.team2)} ·{' '}
+                                                    {formatMatchType(savedRecord.snapshot.state.matchType)} · {formatSavedDate(savedRecord.updatedAt)}
+                                                </span>
                                             </div>
+                                            <div className="saved-record__actions">
+                                                <button aria-label={`Resume ${savedRecord.name}`} className="icon-button" onClick={() => resumeSavedMatch(savedRecord.snapshot)} title="Resume" type="button">
+                                                    <Icon name="play" size={15} />
+                                                </button>
+                                                {!savedRecord.isAutoSave && (
+                                                    <>
+                                                        <button aria-label={`Rename ${savedRecord.name}`} className="icon-button" onClick={() => startRenamingSavedRecord(savedRecord)} title="Rename" type="button">
+                                                            <Icon name="edit" size={15} />
+                                                        </button>
+                                                        <button aria-label={`Delete ${savedRecord.name}`} className="icon-button" onClick={() => handleDeleteSavedRecord(savedRecord.id)} title="Delete" type="button">
+                                                            <Icon name="trash" size={15} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+
                                             {editingSaveId === savedRecord.id && (
-                                                <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                                                    <input
-                                                        type="text"
-                                                        value={renameDraft}
-                                                        onChange={(event) => setRenameDraft(event.target.value)}
-                                                        className="flex-1 rounded-xl border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 px-3 py-2 text-sm"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRenameSavedRecord(savedRecord.id)}
-                                                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-xl shadow"
-                                                    >
-                                                        Save Name
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setEditingSaveId(null);
-                                                            setRenameDraft('');
-                                                        }}
-                                                        className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 text-sm font-bold px-4 py-2 rounded-xl shadow"
-                                                    >
-                                                        Cancel
-                                                    </button>
+                                                <div className="rename-row">
+                                                    <input aria-label="Save name" className="field" onChange={(event) => setRenameDraft(event.target.value)} value={renameDraft} />
+                                                    <button className="button button--primary" onClick={() => handleRenameSavedRecord(savedRecord.id)} type="button">Save name</button>
+                                                    <button className="button button--ghost" onClick={() => { setEditingSaveId(null); setRenameDraft(''); }} type="button">Cancel</button>
                                                 </div>
                                             )}
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row justify-center gap-5 mt-8">
-                    <div className="bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/50 dark:to-pink-900/50 border-2 border-red-300 dark:border-red-700 hover:border-red-500 px-6 py-3 text-xl font-bold rounded-2xl shadow-lg text-red-700 dark:text-red-300 transform hover:scale-105 transition-all duration-300 cursor-pointer">
-                        🪙 Heads
-                    </div>
-                    <div className="bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 border-2 border-blue-300 dark:border-blue-700 hover:border-blue-500 px-6 py-3 text-xl font-bold rounded-2xl shadow-lg text-blue-700 dark:text-blue-300 transform hover:scale-105 transition-all duration-300 cursor-pointer">
-                        🪙 Tails
-                    </div>
-                </div>
-                <div className="flex flex-col sm:flex-row justify-center gap-6 mt-6">
-                    {team1Selected ? (
-                        <div
-                            className={cx(
-                                'px-6 py-3 font-bold text-white rounded-2xl shadow-xl text-center transform hover:scale-105 transition-all duration-300 border-2',
-                                {
-                                    'bg-gradient-to-r from-yellow-400 to-yellow-600 border-yellow-300': team1Selected === 'Australia',
-                                    'bg-gradient-to-r from-orange-400 to-orange-600 border-orange-300': team1Selected === 'India',
-                                    'bg-gradient-to-r from-blue-600 to-blue-800 border-blue-400': team1Selected === 'England',
-                                    'bg-gradient-to-r from-gray-700 to-gray-900 border-gray-500': team1Selected === 'New_Zealand',
-                                    'bg-gradient-to-r from-green-500 to-green-700 border-green-300': team1Selected === 'South_Africa',
-                                },
                             )}
-                        >
-                            🏏 {team1Selected.replace('_', ' ')}
-                        </div>
-                    ) : (
-                        <div className="px-6 py-3 bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl text-gray-500 dark:text-gray-400 font-semibold">
-                            Select Team 1
                         </div>
                     )}
-                    
-                    <div className="flex items-center justify-center text-3xl font-bold text-gray-400 dark:text-gray-500">
-                        VS
-                    </div>
-                    
-                    {team2Selected ? (
-                        <div
-                            className={cx(
-                                'px-6 py-3 font-bold text-white rounded-2xl shadow-xl text-center transform hover:scale-105 transition-all duration-300 border-2',
-                                {
-                                    'bg-gradient-to-r from-yellow-400 to-yellow-600 border-yellow-300': team2Selected === 'Australia',
-                                    'bg-gradient-to-r from-orange-400 to-orange-600 border-orange-300': team2Selected === 'India',
-                                    'bg-gradient-to-r from-blue-600 to-blue-800 border-blue-400': team2Selected === 'England',
-                                    'bg-gradient-to-r from-gray-700 to-gray-900 border-gray-500': team2Selected === 'New_Zealand',
-                                    'bg-gradient-to-r from-green-500 to-green-700 border-green-300': team2Selected === 'South_Africa',
-                                },
-                            )}
-                        >
-                            🏏 {team2Selected.replace('_', ' ')}
-                        </div>
-                    ) : (
-                        <div className="px-6 py-3 bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl text-gray-500 dark:text-gray-400 font-semibold">
-                            Select Team 2
-                        </div>
-                    )}
-                </div>
-                <div className="mt-8 flex justify-center">
-                    {isTossed ? (
-                        <div className="bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 border-2 border-green-300 dark:border-green-700 px-8 py-6 rounded-2xl shadow-lg text-center max-w-md">
-                            <div className="text-3xl font-bold text-green-700 dark:text-green-300 mb-3">🎉 Toss Result! 🎉</div>
-                            <div className="text-lg font-semibold text-green-800 dark:text-green-200 leading-relaxed">
-                                🏏 <span className="font-bold text-green-900 dark:text-green-100">{team1Selected.replace('_', ' ')}</span> won the toss and chose to bat first!
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 border-2 border-dashed border-gray-300 dark:border-gray-500 px-8 py-6 rounded-2xl text-center">
-                            <div className="text-lg font-semibold text-gray-500 dark:text-gray-300">
-                                🪙 Waiting for coin toss...
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className="flex justify-center mt-12">
-                    <Link
-                        to={{
-                            pathname: '/history',
-                        }}
-                    >
-                        <button className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-2xl shadow-xl border-2 border-purple-300 transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 text-lg">
-                            📊 View Match History
-                        </button>
-                    </Link>
-                </div>
-            </div>
-        </div>
+                </section>
+            </section>
+        </main>
     );
 }
+
 export default Landing;

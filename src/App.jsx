@@ -1,9 +1,9 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect, useRef, useCallback, useReducer } from 'react';
-import './App.css';
 import Dice from 'modern-react-dice-roll';
-import Header from './Header';
-import ScoreCard from './ScoreCard';
+import ScoreCard from './components/match/ScoreCard';
+import Icon from './components/ui/Icon';
+import TeamMark from './components/ui/TeamMark';
 // import { Button } from '@material-ui/core';
 import { useStateValue } from './StateProvider';
 import { Link } from 'react-router-dom';
@@ -19,6 +19,7 @@ import {
     upsertAutoSaveRecord,
 } from './savedMatch';
 import { createInitialMatchEngineState, matchEngineReducer } from './matchEngine';
+import { formatInningsName, formatMatchType, formatResult, formatTeamName } from './utils/matchPresentation';
 
 function App() {
     const [state, dispatch] = useStateValue();
@@ -577,222 +578,200 @@ function App() {
         return null;
     })();
 
-    const resultText = state.result
-        ? state.result.replace('_', ' ')
-        : totalTeamScore > score
-        ? `${state.team1?.replace('_', ' ')} won by ${totalTeamScore - score} runs`
-        : `${state.team2?.replace('_', ' ')} won by ${10 - wickets} wickets`;
+    const resultText = formatResult(
+        state.result ||
+            (totalTeamScore > score
+                ? `${state.team1?.replace('_', ' ')} won by ${totalTeamScore - score} runs`
+                : `${state.team2?.replace('_', ' ')} won by ${10 - wickets} wickets`),
+    );
+
+    const canAdvanceInnings = wickets === 10 && innings < maxInnings && matchOver === 0;
+    const inningsSteps = Array.from({ length: maxInnings }, (_, index) => index + 1);
+
+    if (!resumeStateChecked) {
+        return (
+            <main className="app-page">
+                <div className="app-container">
+                    <div className="state-panel">
+                        <div>
+                            <span className="state-panel__icon"><Icon name="dice" size={28} /></span>
+                            <h2>Preparing the match centre</h2>
+                            <p>Restoring your teams, innings state, and latest auto-save.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        );
+    }
+
+    if (!state.team1 || !state.team2) {
+        return (
+            <main className="app-page">
+                <div className="app-container">
+                    <div className="state-panel">
+                        <div>
+                            <span className="state-panel__icon"><Icon name="users" size={28} /></span>
+                            <h2>No fixture selected</h2>
+                            <p>Choose two squads and complete the toss before opening the live match centre.</p>
+                            <Link className="button button--primary" to="/"><Icon name="arrowRight" size={16} /> Build a match</Link>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-            <Header />
-            
-            {/* Compact Match Interface */}
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2">
-                
-                {/* Match Result - Only show when match is over */}
-                {matchOver === 1 && (
-                    <div className="mb-4 text-center">
-                        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-2xl shadow-xl inline-block">
-                            <span className="text-xl font-bold">
-                                🏆 {resultText}
-                            </span>
+        <main className="app-page">
+            <div className="app-container match-shell">
+                <section className="match-masthead page-enter">
+                    <div className="matchup-lockup">
+                        <TeamMark size="medium" teamId={state.team1} />
+                        <span className="matchup-lockup__versus">VS</span>
+                        <TeamMark size="medium" teamId={state.team2} />
+                        <div className="matchup-lockup__copy">
+                            <span className="eyebrow">{formatMatchType(state.matchType)}</span>
+                            <h1>{formatTeamName(state.team1)} vs {formatTeamName(state.team2)}</h1>
                         </div>
                     </div>
+                    <div className="match-masthead__aside">
+                        <span className="status-pill status-pill--live">{formatInningsName(innings)} · {battingTeamName} batting</span>
+                        <div className="innings-track" aria-label={`Innings ${innings} of ${maxInnings}`}>
+                            {inningsSteps.map((step) => (
+                                <span className={`innings-step ${step < innings ? 'innings-step--complete' : ''} ${step === innings ? 'innings-step--active' : ''}`} key={step}>{step}</span>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+                
+                {matchOver === 1 && (
+                    <section className="result-banner page-enter">
+                        <span className="result-banner__icon"><Icon name="trophy" size={23} /></span>
+                        <span><strong>{resultText}</strong><span>Match complete · the final scorecard is ready</span></span>
+                        <Link className="button button--secondary" onClick={dispatchTeam2} to="/summary">Review match <Icon name="arrowRight" size={15} /></Link>
+                    </section>
                 )}
                 
-                {/* Main Game Area - Side by Side */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 min-h-[calc(100vh-200px)] lg:h-[calc(100vh-200px)]">
+                <div className="match-grid">
                     
-                    {/* Left: Dice & Controls */}
-                    <div className="lg:col-span-4">
-                        <div className="sticky top-4 flex flex-col">
-                            {/* Dice Area (fixed height to avoid shifting) */}
-                            <div className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-600 p-4 sm:p-6 mb-4 min-h-[250px] sm:min-h-[300px] flex flex-col items-center justify-center">
-                                <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-4 rounded-full shadow-2xl border-4 border-white mb-4">
-                                    {wickets !== 10 && matchOver === 0 ? (
-                                        <Dice
-                                            onRoll={(value) => scoring(value)}
-                                            size={100}
-                                            sound={'/audio.mp3'}
-                                            faceBg={'White'}
-                                            faces={dice_face}
-                                            rollingTime={150}
-                                            triggers={isProcessing ? [] : ['click', 'a', 'Enter']}
-                                        />
-                                    ) : (
-                                        <div className="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-xl flex items-center justify-center">
-                                            <span className="text-3xl">🏏</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-base sm:text-lg font-bold text-gray-700 dark:text-gray-200">🎲 Roll the Dice!</div>
-                                    <div className="text-sm text-gray-500 dark:text-gray-400">Click, Press 'A' or Enter</div>
-                                </div>
+                    <aside className="control-rail">
+                        <section className="control-card dice-card">
+                            <div className="dice-card__top">
+                                <span>Delivery control</span>
+                                <span className="status-pill status-pill--live">Ball {ballInOver + 1}</span>
                             </div>
-                            
-                            {/* Action Buttons */}
-                            <div className="flex flex-col gap-3">
-                                <button
-                                    className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
-                                    onClick={() => afterEffect()}
-                                    disabled={innings === maxInnings || matchOver === 1}
-                                >
-                                    🏏 Next Innings
-                                </button>
-
-                                <div className="bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 shadow-lg">
-                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                                        Save Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={manualSaveName}
-                                        onChange={(event) => setManualSaveName(event.target.value)}
-                                        placeholder="Example: Chase setup before final over"
-                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                            <div className="dice-stage">
+                                {wickets !== 10 && matchOver === 0 ? (
+                                    <Dice
+                                        faceBg="White"
+                                        faces={dice_face}
+                                        onRoll={scoring}
+                                        rollingTime={150}
+                                        size={108}
+                                        triggers={isProcessing ? [] : ['click', 'a', 'Enter']}
                                     />
-                                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        Auto-save also updates after every roll.
-                                        {lastAutoSavedAt && ` Last auto-save: ${new Date(lastAutoSavedAt).toLocaleTimeString()}`}
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
-                                    onClick={handleSaveGame}
-                                    disabled={!resumeStateChecked}
-                                >
-                                    💾 Create Named Save + JSON
-                                </button>
-
-                                <div className="bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 shadow-lg">
-                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-                                        Overwrite Existing Save
-                                    </label>
-                                    <select
-                                        value={selectedOverwriteSaveId}
-                                        onChange={(event) => setSelectedOverwriteSaveId(event.target.value)}
-                                        disabled={!resumeStateChecked || !overwriteCandidates.length}
-                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 disabled:opacity-60"
-                                    >
-                                        <option value="">Select a save slot</option>
-                                        {overwriteCandidates.map((savedRecord) => (
-                                            <option key={savedRecord.id} value={savedRecord.id}>
-                                                {savedRecord.name} | {savedRecord.storageLocation === 'backend' ? 'Backend' : 'Browser'} |{' '}
-                                                {new Date(savedRecord.updatedAt).toLocaleString()}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        {overwriteCandidates.length
-                                            ? 'Only named saves for this matchup and format are shown here.'
-                                            : 'No named saves for this matchup yet. Create one first.'}
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    className="bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
-                                    onClick={handleOverwriteSave}
-                                    disabled={!resumeStateChecked || !selectedOverwriteSaveId}
-                                >
-                                    ♻️ Overwrite Selected Save + JSON
-                                </button>
-                                
-                                <Link to={{ pathname: '/summary' }}>
-                                    <button
-                                        disabled={innings !== maxInnings}
-                                        className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 disabled:transform-none"
-                                        onClick={() => dispatchTeam2()}
-                                    >
-                                        📊 Match Summary
-                                    </button>
-                                </Link>
-
-                                {saveFeedback && (
-                                    <div
-                                        className={`rounded-xl px-4 py-3 text-sm font-semibold shadow-lg ${
-                                            saveFeedback.type === 'success'
-                                                ? 'bg-green-100 text-green-800 border border-green-300'
-                                                : 'bg-red-100 text-red-800 border border-red-300'
-                                        }`}
-                                    >
-                                        {saveFeedback.message}
-                                    </div>
+                                ) : (
+                                    <span className="dice-complete"><Icon name={matchOver ? 'trophy' : 'wicket'} size={36} /></span>
                                 )}
                             </div>
-                        </div>
-                    </div>
-                    
-                    {/* Right: Scorecard */}
-                    <div className="lg:col-span-8">
-                        <div className="h-full overflow-auto">
-                            
-                            {/* Debug info - Commented for cleaner UI */}
-                            {/* <div className="text-xs text-gray-400 text-center mb-2">
-                                Individual total: {players.reduce((sum, s) => sum + s, 0)} | Team score: {score}
-                                {players.reduce((sum, s) => sum + s, 0) !== score && (
-                                    <span className="text-red-400 ml-2">⚠️ DESYNC</span>
+                            <div className="dice-card__copy">
+                                <strong>{matchOver ? 'Match complete' : wickets === 10 ? 'Innings complete' : isProcessing ? 'Updating the score…' : 'Roll the next delivery'}</strong>
+                                <span>{matchOver ? 'Open the summary for the full result' : wickets === 10 ? 'Advance when you are ready' : 'Click the dice · press A · press Enter'}</span>
+                            </div>
+                            <div className="auto-save-status">
+                                <Icon name="cloud" size={14} />
+                                {lastAutoSavedAt ? `Auto-saved ${new Date(lastAutoSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Auto-save is active'}
+                            </div>
+                        </section>
+
+                        <section className="control-card">
+                            <div className="control-actions">
+                                <button className="button button--primary button--wide" disabled={!canAdvanceInnings} onClick={afterEffect} type="button">
+                                    <Icon name="bat" size={17} />
+                                    {innings < maxInnings ? `Start ${formatInningsName(innings + 1)}` : 'Final innings'}
+                                </button>
+                                {matchOver === 1 ? (
+                                    <Link className="button button--dark button--wide" onClick={dispatchTeam2} to="/summary">
+                                        <Icon name="trophy" size={17} /> Match summary
+                                    </Link>
+                                ) : (
+                                    <button className="button button--dark button--wide" disabled type="button"><Icon name="trophy" size={17} /> Match summary</button>
                                 )}
-                            </div> */}
-                            
+                            </div>
+                            <p className="control-hint">
+                                <Icon name="shield" size={15} />
+                                {wickets === 10 && innings < maxInnings ? 'This innings is complete. Advance to reset the crease.' : 'The next-innings control unlocks after all ten wickets fall.'}
+                            </p>
+                        </section>
+
+                        <details className="control-card save-drawer">
+                            <summary>
+                                <span><Icon name="save" size={16} /> Save & export</span>
+                                <Icon name="chevronDown" size={16} />
+                            </summary>
+                            <div className="save-drawer__body">
+                                <label htmlFor="save-name">Create a named checkpoint</label>
+                                <input className="field" id="save-name" onChange={(event) => setManualSaveName(event.target.value)} placeholder="Before the final chase" type="text" value={manualSaveName} />
+                                <button className="button button--secondary button--wide" onClick={handleSaveGame} type="button"><Icon name="save" size={15} /> Save + download JSON</button>
+
+                                <label htmlFor="overwrite-save">Overwrite an existing checkpoint</label>
+                                <select className="select-field" disabled={!overwriteCandidates.length} id="overwrite-save" onChange={(event) => setSelectedOverwriteSaveId(event.target.value)} value={selectedOverwriteSaveId}>
+                                    <option value="">{overwriteCandidates.length ? 'Choose a save' : 'No named saves for this fixture'}</option>
+                                    {overwriteCandidates.map((savedRecord) => (
+                                        <option key={savedRecord.id} value={savedRecord.id}>{savedRecord.name} · {savedRecord.storageLocation === 'backend' ? 'Backend' : 'Browser'}</option>
+                                    ))}
+                                </select>
+                                <button className="button button--ghost button--wide" disabled={!selectedOverwriteSaveId} onClick={handleOverwriteSave} type="button"><Icon name="refresh" size={15} /> Overwrite + download</button>
+
+                                {saveFeedback && <div className={`save-feedback save-feedback--${saveFeedback.type}`}>{saveFeedback.message}</div>}
+                            </div>
+                        </details>
+                    </aside>
+                    
+                    <section className="match-main">
+                        <div>
                             {leadTrailInfo && (
-                                <div className="mb-3 text-center">
-                                    <div className="inline-flex items-center gap-2 bg-white/80 dark:bg-gray-700/80 text-gray-800 dark:text-gray-100 px-4 py-2 rounded-xl shadow border border-gray-200 dark:border-gray-600">
-                                        <span className="font-bold">
-                                            {(leadTrailInfo.team ? leadTrailInfo.team.replace('_', ' ') : 'Team')} {leadTrailInfo.label} by {leadTrailInfo.runs}
-                                        </span>
-                                    </div>
+                                <div className="lead-trail-banner">
+                                    <span>Test match position</span>
+                                    <strong>{formatTeamName(leadTrailInfo.team)} {leadTrailInfo.label.toLowerCase()} by {leadTrailInfo.runs} runs</strong>
                                 </div>
                             )}
 
                             {playerObj ? (
                                 <ScoreCard
-                                    scorelist={players}
+                                    ballInOver={ballInOver}
+                                    battingTeamId={isTeam1Batting ? state.team1 : state.team2}
+                                    battingTeamName={battingTeamName}
                                     current={currentPlayers}
+                                    currentOver={currentOver}
+                                    fallOn={fallOn}
+                                    firstTeam={playerObj.team1}
+                                    innings={innings}
+                                    playerFell={playerFell}
+                                    players={battingPlayers}
+                                    scorelist={players}
+                                    secondTeam={playerObj.team2}
                                     status={playersOut}
                                     striker={striker}
-                                    firstTeam={playerObj.team1}
-                                    secondTeam={playerObj.team2}
-                                    team1Score={isTestMatch ? null : totalTeamScore}
-                                    battingTeamName={battingTeamName}
-                                    players={battingPlayers}
-                                    innings={innings}
-                                    currentOver={currentOver}
-                                    ballInOver={ballInOver}
-                                    fallOn={fallOn}
-                                    playerFell={playerFell}
                                     target={targetScore}
+                                    team1Score={isTestMatch ? null : totalTeamScore}
                                 />
                             ) : (
-                                <div className="text-center py-12">
-                                    <div className="text-4xl mb-4">🏏</div>
-                                    <div className="text-xl font-semibold text-gray-600 dark:text-gray-300">Loading player data...</div>
+                                <div className="state-panel">
+                                    <div>
+                                        <span className="state-panel__icon"><Icon name="users" size={28} /></span>
+                                        <h2>Loading the playing XI</h2>
+                                        <p>Connecting to the team service and preparing both batting orders.</p>
+                                    </div>
                                 </div>
                             )}
-                            
-
                         </div>
-                    </div>
+                    </section>
                 </div>
 
             </div>
-        </div>
-
-        // Headers
-        // Home
+        </main>
     );
 }
 
 export default App;
-
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
-// I have to pass the same items i am passing to the scorecard page along with the name of the team
-// the item can only be send through link routing when the match gets over similarly make the button appear at the end of the match
-// best approach is to use react context api to send the score to the reducer from where it can be accessed
