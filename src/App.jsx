@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect, useRef, useCallback, useReducer } from 'react';
-import Dice from 'modern-react-dice-roll';
+import DiceRoller from './components/match/DiceRoller';
 import ScoreCard from './components/match/ScoreCard';
 import Icon from './components/ui/Icon';
 import TeamMark from './components/ui/TeamMark';
@@ -20,9 +20,11 @@ import {
 } from './savedMatch';
 import { createInitialMatchEngineState, matchEngineReducer } from './matchEngine';
 import { formatInningsName, formatMatchType, formatResult, formatTeamName } from './utils/matchPresentation';
+import { useDiceRollSound } from './hooks/useDiceRollSound';
 
 function App() {
     const [state, dispatch] = useStateValue();
+    const playDiceRollSound = useDiceRollSound();
 
     const [playerObj, setPlayerObj] = useState();
     const [manualSaveName, setManualSaveName] = useState('');
@@ -662,14 +664,11 @@ function App() {
                             </div>
                             <div className="dice-stage">
                                 {wickets !== 10 && matchOver === 0 ? (
-                                    <Dice
-                                        faceBg="White"
+                                    <DiceRoller
+                                        disabled={isProcessing}
                                         faces={dice_face}
                                         onRoll={scoring}
-                                        rollingTime={150}
-                                        size={108}
-                                        sound="/audio.mp3"
-                                        triggers={isProcessing ? [] : ['click', 'a', 'Enter']}
+                                        onRollStart={playDiceRollSound}
                                     />
                                 ) : (
                                     <span className="dice-complete"><Icon name={matchOver ? 'trophy' : 'wicket'} size={36} /></span>
