@@ -49,6 +49,18 @@ const createBaseSnapshot = (overrides = {}) =>
     });
 
 describe('savedMatch snapshots', () => {
+    it('updates an automatically generated One Day save name when converting to Test', () => {
+        const snapshot = createBaseSnapshot({ innings: 2 });
+        expect(snapshot.saveName).toBe('India vs Australia - One Day - Innings 2');
+        expect(convertSavedMatchSnapshotToTest(snapshot).saveName).toBe('India vs Australia - Test - Innings 2');
+    });
+
+    it('preserves the One Day interpretation of legacy saves without a format', () => {
+        const snapshot = createBaseSnapshot();
+        delete snapshot.state.matchType;
+        expect(normalizeSavedMatch(snapshot).state.matchType).toBe('oneday');
+    });
+
     it.each([1, 2])('converts ODI innings %s without changing live batting progress', (innings) => {
         const snapshot = createBaseSnapshot({
             innings,
@@ -61,6 +73,7 @@ describe('savedMatch snapshots', () => {
             currentOver: 1,
             ballInOver: 3,
         });
+        snapshot.saveName = 'Custom checkpoint';
         snapshot.state.team1_data.score = innings === 2 ? 144 : 0;
         const original = JSON.parse(JSON.stringify(snapshot));
         const converted = convertSavedMatchSnapshotToTest(snapshot);

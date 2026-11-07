@@ -5,7 +5,7 @@ export const initialState = {
     team2_data: {},
     team1_data2: {},
     team2_data2: {},
-    matchType: 'oneday',
+    matchType: 'test',
     result: null,
     timestamp: null,
 };
@@ -20,7 +20,7 @@ const reducer = (state, action) => {
                 ...initialState,
                 team1: action.team1,
                 team2: action.team2,
-                matchType: action.matchType,
+                matchType: action.matchType ?? initialState.matchType,
             };
         case 'SET_TEAM':
             return {

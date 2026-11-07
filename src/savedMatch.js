@@ -711,7 +711,7 @@ export const convertSavedMatchSnapshotToTest = (input) => {
         throw new Error('This save is already a Test match.');
     }
 
-    return {
+    const converted = {
         ...snapshot,
         savedAt: new Date().toISOString(),
         state: {
@@ -730,6 +730,11 @@ export const convertSavedMatchSnapshotToTest = (input) => {
             team1SecondInningsScore: 0,
         },
     };
+
+    if (snapshot.saveName === getDefaultSaveName(snapshot)) {
+        converted.saveName = getDefaultSaveName(converted);
+    }
+    return converted;
 };
 
 export const convertSavedMatchRecordToTest = async (recordId) => {
@@ -745,13 +750,14 @@ export const convertSavedMatchRecordToTest = async (recordId) => {
     const snapshot = convertSavedMatchSnapshotToTest(targetRecord.snapshot);
     let updatedRecord = normalizeSavedMatchRecord({
         ...targetRecord,
+        name: snapshot.saveName,
         updatedAt: snapshot.savedAt,
         snapshot,
     });
 
     if (targetRecord.storageLocation === BACKEND_SAVE_STORAGE) {
         const apiRecord = await updateSavedMatchRecordOnApi(recordId, {
-            name: targetRecord.name,
+            name: snapshot.saveName,
             snapshot,
         });
         updatedRecord = normalizeSavedMatchRecord({ ...apiRecord, storageLocation: BACKEND_SAVE_STORAGE });

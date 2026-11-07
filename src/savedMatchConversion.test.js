@@ -76,6 +76,18 @@ describe('converting saved records to Test', () => {
         expect((await readSavedMatchRecordsFromStorage())[0].snapshot.appState).toEqual(original.snapshot.appState);
     });
 
+    it('persists the new Test name for a save using the automatically generated name', async () => {
+        const original = createRecord();
+        original.name = 'Australia vs India - One Day - Innings 2';
+        original.snapshot.saveName = original.name;
+        api.fetch.mockResolvedValue([original]);
+        api.update.mockImplementation(async (id, payload) => ({ ...original, ...payload, updatedAt: payload.snapshot.savedAt }));
+        const records = await convertSavedMatchRecordToTest(original.id);
+        expect(records[0].name).toBe('Australia vs India - Test - Innings 2');
+        expect(api.update.mock.calls[0][1].name).toBe('Australia vs India - Test - Innings 2');
+        expect(records[0].snapshot.appState).toEqual(original.snapshot.appState);
+    });
+
     it('keeps the ODI save when its backend update fails', async () => {
         const original = createRecord();
         api.fetch.mockResolvedValue([original]);

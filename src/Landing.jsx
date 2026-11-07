@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { useStateValue } from './StateProvider';
+import { initialState } from './reducer';
 import CoinToss from './components/setup/CoinToss';
 import FormatToggle from './components/setup/FormatToggle';
 import TeamSelector from './components/setup/TeamSelector';
@@ -20,7 +21,7 @@ import {
 function Landing() {
     const [team1Selected, setTeam1Selected] = useState('');
     const [team2Selected, setTeam2Selected] = useState('');
-    const [matchType, setMatchType] = useState('oneday');
+    const [matchType, setMatchType] = useState(initialState.matchType);
     const [isTossed, setIsTossed] = useState(false);
     const [savedMatchRecords, setSavedMatchRecords] = useState([]);
     const [resumeError, setResumeError] = useState(null);
