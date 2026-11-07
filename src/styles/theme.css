@@ -1011,6 +1011,12 @@ summary:focus-visible {
     min-width: 0;
 }
 
+.saved-latest__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .saved-latest__copy strong,
 .saved-latest__copy span {
     display: block;
@@ -1083,6 +1089,12 @@ summary:focus-visible {
 .saved-record__actions .icon-button {
     width: 34px;
     height: 34px;
+}
+
+.saved-convert {
+    min-height: 34px;
+    padding: 7px 10px;
+    font-size: 0.7rem;
 }
 
 .rename-row {
@@ -2356,12 +2368,22 @@ summary:focus-visible {
         grid-template-columns: auto minmax(0, 1fr);
     }
 
-    .saved-latest > .button {
+    .saved-latest__actions {
         grid-column: 1 / -1;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .saved-latest__actions .button {
+        flex: 1;
     }
 }
 
 @media (max-width: 520px) {
+    .saved-record {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .broadcast-preview {
         display: none;
     }

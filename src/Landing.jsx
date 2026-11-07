@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { useStateValue } from './StateProvider';
 import CoinToss from './components/setup/CoinToss';
@@ -8,6 +8,7 @@ import Icon from './components/ui/Icon';
 import TeamMark from './components/ui/TeamMark';
 import { formatMatchType, formatSavedDate, formatTeamName } from './utils/matchPresentation';
 import {
+    convertSavedMatchRecordToTest,
     deleteSavedMatchRecord,
     normalizeSavedMatch,
     queueResumeMatch,
@@ -26,6 +27,9 @@ function Landing() {
     const [editingSaveId, setEditingSaveId] = useState(null);
     const [renameDraft, setRenameDraft] = useState('');
     const [showSavedLibrary, setShowSavedLibrary] = useState(false);
+    const [convertingSaveId, setConvertingSaveId] = useState(null);
+    const [conversionFeedback, setConversionFeedback] = useState(null);
+    const conversionInProgressRef = useRef(false);
     const [, dispatch] = useStateValue();
     const history = useHistory();
 
@@ -131,6 +135,26 @@ function Landing() {
         } catch (error) {
             console.error('Failed to rename saved match', error);
             setResumeError('That save could not be renamed right now.');
+        }
+    };
+
+    const handleConvertSaveToTest = async (savedRecord) => {
+        if (conversionInProgressRef.current) {
+            return;
+        }
+        conversionInProgressRef.current = true;
+        setConvertingSaveId(savedRecord.id);
+        setConversionFeedback(null);
+        setResumeError(null);
+        try {
+            setSavedMatchRecords(await convertSavedMatchRecordToTest(savedRecord.id));
+            setConversionFeedback(`Converted "${savedRecord.name}" to Test. Scores and wickets kept. Resume the save to continue.`);
+        } catch (error) {
+            console.error('Failed to convert saved match to Test', error);
+            setResumeError('That save could not be converted right now. Try again.');
+        } finally {
+            conversionInProgressRef.current = false;
+            setConvertingSaveId(null);
         }
     };
 
@@ -308,12 +332,32 @@ function Landing() {
                                     {latestSavedRecord.snapshot.appState.score}/{latestSavedRecord.snapshot.appState.wickets} · Updated {formatSavedDate(latestSavedRecord.updatedAt)}
                                 </span>
                             </div>
-                            <button className="button button--dark" onClick={handleResumeLatestSave} type="button">
-                                <Icon name="play" size={15} /> Resume latest
-                            </button>
+                            <div className="saved-latest__actions">
+                                {latestSavedRecord.snapshot.state.matchType === 'oneday' && (
+                                    <button
+                                        aria-label="Convert latest save to Test"
+                                        className="button button--secondary"
+                                        disabled={Boolean(convertingSaveId)}
+                                        onClick={() => handleConvertSaveToTest(latestSavedRecord)}
+                                        title="Keep the scores and wickets and continue as a Test match"
+                                        type="button"
+                                    >
+                                        <Icon name="shield" size={15} /> {convertingSaveId === latestSavedRecord.id ? 'Converting…' : 'Convert to Test'}
+                                    </button>
+                                )}
+                                <button className="button button--dark" disabled={Boolean(convertingSaveId)} onClick={handleResumeLatestSave} type="button">
+                                    <Icon name="play" size={15} /> Resume latest
+                                </button>
+                            </div>
                         </div>
                     ) : (
                         <div className="empty-inline">No saved fixtures yet. Start a match and the first auto-save will appear here.</div>
+                    )}
+
+                    {conversionFeedback && (
+                        <div className="save-feedback save-feedback--success" role="status">
+                            <Icon name="check" size={15} /> {conversionFeedback}
+                        </div>
                     )}
 
                     {resumeError && (
@@ -337,19 +381,32 @@ function Landing() {
                                                 <strong>{savedRecord.name}{savedRecord.isAutoSave ? ' · Auto save' : ''}</strong>
                                                 <span>
                                                     {formatTeamName(savedRecord.snapshot.state.team1)} vs {formatTeamName(savedRecord.snapshot.state.team2)} ·{' '}
-                                                    {formatMatchType(savedRecord.snapshot.state.matchType)} · {formatSavedDate(savedRecord.updatedAt)}
+                                                    {formatMatchType(savedRecord.snapshot.state.matchType)} · Innings {savedRecord.snapshot.appState.innings} ·{' '}
+                                                    {savedRecord.snapshot.appState.score}/{savedRecord.snapshot.appState.wickets} · {formatSavedDate(savedRecord.updatedAt)}
                                                 </span>
                                             </div>
                                             <div className="saved-record__actions">
-                                                <button aria-label={`Resume ${savedRecord.name}`} className="icon-button" onClick={() => resumeSavedMatch(savedRecord.snapshot)} title="Resume" type="button">
+                                                {savedRecord.snapshot.state.matchType === 'oneday' && (
+                                                    <button
+                                                        aria-label={`Convert ${savedRecord.name} to Test`}
+                                                        className="button button--secondary saved-convert"
+                                                        disabled={Boolean(convertingSaveId)}
+                                                        onClick={() => handleConvertSaveToTest(savedRecord)}
+                                                        title="Keep the scores and wickets and continue as a Test match"
+                                                        type="button"
+                                                    >
+                                                        <Icon name="shield" size={14} /> {convertingSaveId === savedRecord.id ? 'Converting…' : 'Convert to Test'}
+                                                    </button>
+                                                )}
+                                                <button aria-label={`Resume ${savedRecord.name}`} className="icon-button" disabled={Boolean(convertingSaveId)} onClick={() => resumeSavedMatch(savedRecord.snapshot)} title="Resume" type="button">
                                                     <Icon name="play" size={15} />
                                                 </button>
                                                 {!savedRecord.isAutoSave && (
                                                     <>
-                                                        <button aria-label={`Rename ${savedRecord.name}`} className="icon-button" onClick={() => startRenamingSavedRecord(savedRecord)} title="Rename" type="button">
+                                                        <button aria-label={`Rename ${savedRecord.name}`} className="icon-button" disabled={Boolean(convertingSaveId)} onClick={() => startRenamingSavedRecord(savedRecord)} title="Rename" type="button">
                                                             <Icon name="edit" size={15} />
                                                         </button>
-                                                        <button aria-label={`Delete ${savedRecord.name}`} className="icon-button" onClick={() => handleDeleteSavedRecord(savedRecord.id)} title="Delete" type="button">
+                                                        <button aria-label={`Delete ${savedRecord.name}`} className="icon-button" disabled={Boolean(convertingSaveId)} onClick={() => handleDeleteSavedRecord(savedRecord.id)} title="Delete" type="button">
                                                             <Icon name="trash" size={15} />
                                                         </button>
                                                     </>
@@ -359,7 +416,7 @@ function Landing() {
                                             {editingSaveId === savedRecord.id && (
                                                 <div className="rename-row">
                                                     <input aria-label="Save name" className="field" onChange={(event) => setRenameDraft(event.target.value)} value={renameDraft} />
-                                                    <button className="button button--primary" onClick={() => handleRenameSavedRecord(savedRecord.id)} type="button">Save name</button>
+                                                    <button className="button button--primary" disabled={Boolean(convertingSaveId)} onClick={() => handleRenameSavedRecord(savedRecord.id)} type="button">Save name</button>
                                                     <button className="button button--ghost" onClick={() => { setEditingSaveId(null); setRenameDraft(''); }} type="button">Cancel</button>
                                                 </div>
                                             )}

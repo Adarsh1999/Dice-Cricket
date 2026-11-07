@@ -702,6 +702,72 @@ export const overwriteSavedMatchRecord = async (recordId, snapshot, options = {}
     return updatedRecord;
 };
 
+export const convertSavedMatchSnapshotToTest = (input) => {
+    const snapshot = normalizeSavedMatch(input);
+    if (!snapshot) {
+        throw new Error('Invalid saved match snapshot.');
+    }
+    if (snapshot.state.matchType !== 'oneday') {
+        throw new Error('This save is already a Test match.');
+    }
+
+    return {
+        ...snapshot,
+        savedAt: new Date().toISOString(),
+        state: {
+            ...snapshot.state,
+            matchType: 'test',
+            result: null,
+            // An ODI has no second innings for either team. Discard legacy leftovers.
+            team1_data2: createDefaultInningsData(),
+            team2_data2: createDefaultInningsData(),
+        },
+        appState: {
+            ...snapshot.appState,
+            matchOver: 0,
+            testTarget: null,
+            team2FirstInningsScore: 0,
+            team1SecondInningsScore: 0,
+        },
+    };
+};
+
+export const convertSavedMatchRecordToTest = async (recordId) => {
+    const existingRecords = await readSavedMatchRecordsFromStorage();
+    const targetRecord = existingRecords.find((record) => record.id === recordId);
+    if (!targetRecord) {
+        throw new Error('Saved match not found.');
+    }
+    if (targetRecord.snapshot.state.matchType === 'test') {
+        return existingRecords;
+    }
+
+    const snapshot = convertSavedMatchSnapshotToTest(targetRecord.snapshot);
+    let updatedRecord = normalizeSavedMatchRecord({
+        ...targetRecord,
+        updatedAt: snapshot.savedAt,
+        snapshot,
+    });
+
+    if (targetRecord.storageLocation === BACKEND_SAVE_STORAGE) {
+        const apiRecord = await updateSavedMatchRecordOnApi(recordId, {
+            name: targetRecord.name,
+            snapshot,
+        });
+        updatedRecord = normalizeSavedMatchRecord({ ...apiRecord, storageLocation: BACKEND_SAVE_STORAGE });
+        if (!updatedRecord || updatedRecord.snapshot.state.matchType !== 'test') {
+            throw new Error('Could not confirm the converted save.');
+        }
+    }
+
+    const nextRecords = sortSavedMatchRecords(
+        existingRecords.map((record) => record.id === recordId ? updatedRecord : record),
+    );
+    await persistSavedMatchRecords(nextRecords);
+    saveMatchToStorage(updatedRecord.snapshot);
+    return nextRecords;
+};
+
 export const queueResumeMatch = (snapshot) => {
     if (typeof window === 'undefined') {
         return;

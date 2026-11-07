@@ -3,6 +3,7 @@ import {
     BACKEND_SAVE_STORAGE,
     LOCAL_SAVE_STORAGE,
     buildSavedMatchSnapshot,
+    convertSavedMatchSnapshotToTest,
     normalizeSavedMatch,
     normalizeSavedMatchRecord,
 } from './savedMatch';
@@ -48,6 +49,59 @@ const createBaseSnapshot = (overrides = {}) =>
     });
 
 describe('savedMatch snapshots', () => {
+    it.each([1, 2])('converts ODI innings %s without changing live batting progress', (innings) => {
+        const snapshot = createBaseSnapshot({
+            innings,
+            score: 32,
+            wickets: 2,
+            totalTeamScore: innings === 2 ? 144 : 0,
+            players: [7, 16, 9, 0, 0, 0, 0, 0, 0, 0, 0],
+            playersOut: [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            currentPlayers: [3, 1],
+            currentOver: 1,
+            ballInOver: 3,
+        });
+        snapshot.state.team1_data.score = innings === 2 ? 144 : 0;
+        const original = JSON.parse(JSON.stringify(snapshot));
+        const converted = convertSavedMatchSnapshotToTest(snapshot);
+
+        expect(converted.state.matchType).toBe('test');
+        expect(converted.appState).toEqual(original.appState);
+        expect(converted.state.team1_data).toEqual(original.state.team1_data);
+        expect(converted.state.team2_data).toEqual(original.state.team2_data);
+        expect(converted.playerObj).toEqual(original.playerObj);
+        expect(converted.saveName).toBe(original.saveName);
+        expect(snapshot).toEqual(original);
+    });
+
+    it.each([
+        [146, 4, 'Australia won by 6 wickets'],
+        [100, 10, 'India won by 44 runs'],
+    ])('reopens a finished ODI at %s/%s as the second innings of a Test', (score, wickets, result) => {
+        const snapshot = createBaseSnapshot({ innings: 2, totalTeamScore: 144, score, wickets, matchOver: 1 });
+        snapshot.state.result = result;
+        const converted = convertSavedMatchSnapshotToTest(snapshot);
+        expect(converted.appState).toMatchObject({ innings: 2, score, wickets, totalTeamScore: 144, matchOver: 0, testTarget: null });
+        expect(converted.state.result).toBeNull();
+    });
+
+    it('clears unplayed Test innings and stale Test totals from a legacy ODI save', () => {
+        const snapshot = createBaseSnapshot({ innings: 2, team2FirstInningsScore: 999, team1SecondInningsScore: 888, testTarget: 777 });
+        snapshot.state.team1_data2 = { score: 888, wickets: 10 };
+        snapshot.state.team2_data2 = { score: 777, wickets: 10 };
+        const converted = convertSavedMatchSnapshotToTest(snapshot);
+        expect(converted.state.team1_data2.score).toBe(0);
+        expect(converted.state.team2_data2.score).toBe(0);
+        expect(converted.appState).toMatchObject({ team2FirstInningsScore: 0, team1SecondInningsScore: 0, testTarget: null });
+    });
+
+    it('rejects missing snapshots and direct conversion of an existing Test', () => {
+        expect(() => convertSavedMatchSnapshotToTest(null)).toThrow('Invalid saved match');
+        const snapshot = createBaseSnapshot();
+        snapshot.state.matchType = 'test';
+        expect(() => convertSavedMatchSnapshotToTest(snapshot)).toThrow('already a Test');
+    });
+
     it('round-trips a just-fallen wicket save', () => {
         const snapshot = createBaseSnapshot({
             score: 48,
