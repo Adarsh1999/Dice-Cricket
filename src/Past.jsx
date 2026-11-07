@@ -9,6 +9,7 @@ import {
     formatSavedDate,
     formatTeamName,
     getMatchInnings,
+    getMatchResult,
     getTestTarget,
 } from './utils/matchPresentation';
 
@@ -87,14 +88,14 @@ function Past() {
                     </div>
                     <div className="result-lockup">
                         <div className="result-lockup__top"><Icon name="trophy" size={19} /> Official result</div>
-                        <h2>{formatResult(detail.result)}</h2>
+                        <h2>{formatResult(getMatchResult(detail))}</h2>
                     </div>
                 </section>
 
                 <div className="summary-toolbar">
                     <div className="summary-toolbar__copy">
                         <strong>Full batting scorecard</strong>
-                        <span>{isTestMatch ? `Fourth-innings target: ${testTarget}` : `Chase target: ${(detail.team1_data?.score || 0) + 1}`}</span>
+                        <span>{isTestMatch ? testTarget === null ? 'Match ended after three innings' : `Fourth-innings target: ${testTarget}` : `Chase target: ${(detail.team1_data?.score || 0) + 1}`}</span>
                     </div>
                     <Link className="button button--ghost" to="/history"><Icon name="history" size={15} /> Back to archive</Link>
                 </div>

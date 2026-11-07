@@ -1,3 +1,5 @@
+import { getInningsVictoryMargin, getInningsVictoryResult } from '../matchRules';
+
 export const formatTeamName = (teamName) => teamName?.replace(/_/g, ' ') || 'Team';
 
 export const formatMatchType = (matchType) => (matchType === 'test' ? 'Test Match' : 'One Day');
@@ -48,23 +50,43 @@ export const normalizeTeamData = (teamData, teamKey) => {
     };
 };
 
-export const getTestTarget = (match) =>
-    Math.max(
+const isTestMatchRecord = (match) =>
+    match?.matchType === 'test' || (!match?.matchType && Boolean(match?.team1_data2?.scorelist?.length));
+
+export const getArchivedInningsVictoryMargin = (match) =>
+    isTestMatchRecord(match)
+        ? getInningsVictoryMargin({
+              firstInningsScore: match?.team1_data?.score || 0,
+              secondInningsScore: match?.team2_data?.score || 0,
+              thirdInningsScore: match?.team1_data2?.score || 0,
+              thirdInningsWickets: match?.team1_data2?.wickets || 0,
+          })
+        : null;
+
+export const getMatchResult = (match) => {
+    const margin = getArchivedInningsVictoryMargin(match);
+    return margin !== null ? getInningsVictoryResult(match.team2, margin) : match?.result;
+};
+
+export const getTestTarget = (match) => {
+    if (getArchivedInningsVictoryMargin(match) !== null) {
+        return null;
+    }
+    return Math.max(
         1,
         (match?.team1_data?.score || 0) +
             (match?.team1_data2?.score || 0) -
             (match?.team2_data?.score || 0) +
             1,
     );
+};
 
 export const getMatchInnings = (match) => {
     if (!match) {
         return [];
     }
 
-    const isTestMatch =
-        match.matchType === 'test' ||
-        (!match.matchType && Boolean(match.team1_data2?.scorelist?.length));
+    const isTestMatch = isTestMatchRecord(match);
     const innings = [
         {
             id: 'team1-first',
@@ -83,22 +105,22 @@ export const getMatchInnings = (match) => {
     ];
 
     if (isTestMatch) {
-        innings.push(
-            {
-                id: 'team1-second',
-                teamKey: 'team1',
-                teamName: match.team1,
-                data: normalizeTeamData(match.team1_data2, 'team1'),
-                innings: 3,
-            },
-            {
+        innings.push({
+            id: 'team1-second',
+            teamKey: 'team1',
+            teamName: match.team1,
+            data: normalizeTeamData(match.team1_data2, 'team1'),
+            innings: 3,
+        });
+        if (getArchivedInningsVictoryMargin(match) === null) {
+            innings.push({
                 id: 'team2-second',
                 teamKey: 'team2',
                 teamName: match.team2,
                 data: normalizeTeamData(match.team2_data2, 'team2'),
                 innings: 4,
-            },
-        );
+            });
+        }
     }
 
     return innings;

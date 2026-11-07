@@ -79,12 +79,9 @@ function Landing() {
         }
 
         dispatch({
-            type: 'SET_TEAM',
+            type: 'START_MATCH',
             team1: team1Selected,
             team2: team2Selected,
-        });
-        dispatch({
-            type: 'SET_MATCH_TYPE',
             matchType,
         });
         history.push('/match');

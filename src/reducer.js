@@ -15,6 +15,13 @@ export const initialState = {
 const reducer = (state, action) => {
     console.log(action);
     switch (action.type) {
+        case 'START_MATCH':
+            return {
+                ...initialState,
+                team1: action.team1,
+                team2: action.team2,
+                matchType: action.matchType,
+            };
         case 'SET_TEAM':
             return {
                 ...state,

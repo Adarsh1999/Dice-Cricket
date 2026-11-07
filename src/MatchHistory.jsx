@@ -10,6 +10,7 @@ import {
     formatSavedDate,
     formatTeamName,
     getMatchInnings,
+    getMatchResult,
     getScoreLine,
 } from './utils/matchPresentation';
 
@@ -108,7 +109,7 @@ function MatchHistory() {
                                     </div>
 
                                     <div className="archive-card__footer">
-                                        <span className="archive-card__result">{formatResult(match.result)}</span>
+                                        <span className="archive-card__result">{formatResult(getMatchResult(match))}</span>
                                         <span className="archive-card__open"><Icon name="arrowRight" size={15} /></span>
                                     </div>
                                 </Link>

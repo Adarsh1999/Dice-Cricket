@@ -9,6 +9,7 @@ import {
     formatResult,
     formatTeamName,
     getMatchInnings,
+    getMatchResult,
     getTestTarget,
     normalizeTeamData,
 } from './utils/matchPresentation';
@@ -20,7 +21,7 @@ function Summary() {
     const isTestMatch = state.matchType === 'test';
     const inningsRecords = getMatchInnings(state);
     const testTarget = isTestMatch ? getTestTarget(state) : null;
-    const result = state.result ? formatResult(state.result) : 'Match complete';
+    const result = formatResult(getMatchResult(state) || 'Match complete');
 
     const saveToDb = async () => {
         try {
@@ -29,11 +30,12 @@ function Summary() {
 
             const gameData = {
                 ...state,
+                result: getMatchResult(state),
                 matchType: state.matchType || 'oneday',
                 team1_data: normalizeTeamData(state.team1_data, 'team1'),
                 team2_data: normalizeTeamData(state.team2_data, 'team2'),
                 team1_data2: normalizeTeamData(state.team1_data2, 'team1'),
-                team2_data2: normalizeTeamData(state.team2_data2, 'team2'),
+                team2_data2: normalizeTeamData(isTestMatch && testTarget === null ? {} : state.team2_data2, 'team2'),
             };
             const { data } = await axios.post('/history/new', gameData);
             setSaveStatus(data.success ? 'success' : 'error');
@@ -80,7 +82,7 @@ function Summary() {
                 <div className="summary-toolbar">
                     <div className="summary-toolbar__copy">
                         <strong>{inningsRecords.length} innings recorded</strong>
-                        <span>{isTestMatch ? `Fourth-innings target: ${testTarget}` : `Chase target: ${(state.team1_data?.score || 0) + 1}`}</span>
+                        <span>{isTestMatch ? testTarget === null ? 'Match ended after three innings' : `Fourth-innings target: ${testTarget}` : `Chase target: ${(state.team1_data?.score || 0) + 1}`}</span>
                     </div>
                     <span className="status-pill"><Icon name="shield" size={14} /> Verified scorecard</span>
                 </div>

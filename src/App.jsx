@@ -18,7 +18,8 @@ import {
     saveNamedMatchRecord,
     upsertAutoSaveRecord,
 } from './savedMatch';
-import { createInitialMatchEngineState, matchEngineReducer } from './matchEngine';
+import { createInitialMatchEngineState, getMatchInningsVictoryMargin, matchEngineReducer } from './matchEngine';
+import { getInningsVictoryResult } from './matchRules';
 import { formatInningsName, formatMatchType, formatResult, formatTeamName } from './utils/matchPresentation';
 import { useDiceRollSound } from './hooks/useDiceRollSound';
 
@@ -53,6 +54,7 @@ function App() {
         ballInOver,
     } = matchState;
     const isTestMatch = state.matchType === 'test';
+    const inningsVictoryMargin = getMatchInningsVictoryMargin(matchState, { isTestMatch });
     const maxInnings = isTestMatch ? 4 : 2;
     const isTeam1Batting = isTestMatch ? innings === 1 || innings === 3 : innings === 1;
     const [resumeStateChecked, setResumeStateChecked] = useState(false);
@@ -276,7 +278,7 @@ function App() {
 
     // To refresh after 10 wickets haul
     const afterEffect = () => {
-        if (innings >= maxInnings) {
+        if (matchOver || innings >= maxInnings || inningsVictoryMargin !== null) {
             return;
         }
         const setStuff = () => {
@@ -324,15 +326,19 @@ function App() {
         
     }, [isProcessing, isTeam1Batting, playerObj?.team1, playerObj?.team2]);
 
-    const dispatchTeam2 = () => {
+    const persistCurrentInnings = () => {
         const teamKey = isTeam1Batting ? 'team1' : 'team2';
-        const isSecondInnings = isTestMatch && teamKey === 'team2' && innings === 4;
+        const isSecondInnings = isTestMatch && innings >= 3;
         persistInningsData(teamKey, isSecondInnings);
     };
 
     const endMatch = (resultText) => {
         if (matchOver) {
             return;
+        }
+        persistCurrentInnings();
+        if (inningsVictoryMargin !== null) {
+            dispatch({ type: 'SET_TEAM2_SECOND', team2_data2: {} });
         }
         dispatch({
             type: 'SET_RESULT',
@@ -511,7 +517,11 @@ function App() {
     // this useeffect is for the fallen wickets and as well as for changing playersout status and also declaring the winner
     useEffect(() => {
         console.log('current fallen wickets', wickets);
-        if (matchOver) {
+        if (!resumeStateChecked || matchOver) {
+            return;
+        }
+        if (inningsVictoryMargin !== null) {
+            endMatch(getInningsVictoryResult(state.team2, inningsVictoryMargin));
             return;
         }
         const target = isTestMatch
@@ -529,7 +539,7 @@ function App() {
             console.log('team 1 won');
             endMatch(`${state.team1} won by ${Math.max(0, target - 1 - score)} runs`);
         }
-    }, [wickets]);
+    }, [wickets, innings, inningsVictoryMargin, isTestMatch, score, totalTeamScore, testTarget, team1SecondInningsScore, team2FirstInningsScore, matchOver, resumeStateChecked, state.team1, state.team2]);
 
     // Cleanup timeout on unmount
     useEffect(() => {
@@ -587,7 +597,7 @@ function App() {
                 : `${state.team2?.replace('_', ' ')} won by ${10 - wickets} wickets`),
     );
 
-    const canAdvanceInnings = wickets === 10 && innings < maxInnings && matchOver === 0;
+    const canAdvanceInnings = wickets === 10 && innings < maxInnings && matchOver === 0 && inningsVictoryMargin === null;
     const inningsSteps = Array.from({ length: maxInnings }, (_, index) => index + 1);
 
     if (!resumeStateChecked) {
@@ -650,7 +660,7 @@ function App() {
                     <section className="result-banner page-enter">
                         <span className="result-banner__icon"><Icon name="trophy" size={23} /></span>
                         <span><strong>{resultText}</strong><span>Match complete · the final scorecard is ready</span></span>
-                        <Link className="button button--secondary" onClick={dispatchTeam2} to="/summary">Review match <Icon name="arrowRight" size={15} /></Link>
+                        <Link className="button button--secondary" onClick={persistCurrentInnings} to="/summary">Review match <Icon name="arrowRight" size={15} /></Link>
                     </section>
                 )}
                 
@@ -688,10 +698,10 @@ function App() {
                             <div className="control-actions">
                                 <button className="button button--primary button--wide" disabled={!canAdvanceInnings} onClick={afterEffect} type="button">
                                     <Icon name="bat" size={17} />
-                                    {innings < maxInnings ? `Start ${formatInningsName(innings + 1)}` : 'Final innings'}
+                                    {matchOver ? 'Match complete' : innings < maxInnings ? `Start ${formatInningsName(innings + 1)}` : 'Final innings'}
                                 </button>
                                 {matchOver === 1 ? (
-                                    <Link className="button button--dark button--wide" onClick={dispatchTeam2} to="/summary">
+                                    <Link className="button button--dark button--wide" onClick={persistCurrentInnings} to="/summary">
                                         <Icon name="trophy" size={17} /> Match summary
                                     </Link>
                                 ) : (
@@ -700,7 +710,7 @@ function App() {
                             </div>
                             <p className="control-hint">
                                 <Icon name="shield" size={15} />
-                                {wickets === 10 && innings < maxInnings ? 'This innings is complete. Advance to reset the crease.' : 'The next-innings control unlocks after all ten wickets fall.'}
+                                {matchOver ? 'The match is complete. Open the summary to review and save the result.' : wickets === 10 && innings < maxInnings ? 'This innings is complete. Advance to reset the crease.' : 'The next-innings control unlocks after all ten wickets fall.'}
                             </p>
                         </section>
 

@@ -1,3 +1,5 @@
+import { getInningsVictoryMargin } from './matchRules';
+
 const PLAYER_COUNT = 11;
 const WICKET_COUNT = 10;
 
@@ -87,8 +89,23 @@ const processWicket = (state, battingPlayers = []) => {
     };
 };
 
+export const getMatchInningsVictoryMargin = (state, { isTestMatch = false } = {}) =>
+    isTestMatch && state.innings === 3
+        ? getInningsVictoryMargin({
+              firstInningsScore: state.totalTeamScore,
+              secondInningsScore: state.team2FirstInningsScore,
+              thirdInningsScore: state.score,
+              thirdInningsWickets: state.wickets,
+          })
+        : null;
+
 export const advanceInningsState = (state, { isTestMatch = false, maxInnings = 2 } = {}) => {
-    if (state.innings >= maxInnings || state.wickets !== WICKET_COUNT) {
+    if (
+        state.matchOver ||
+        state.innings >= maxInnings ||
+        state.wickets !== WICKET_COUNT ||
+        getMatchInningsVictoryMargin(state, { isTestMatch }) !== null
+    ) {
         return state;
     }
 
@@ -137,7 +154,7 @@ export const matchEngineReducer = (state, action) => {
         case 'HYDRATE_MATCH_STATE':
             return hydrateMatchState(action.payload);
         case 'ROLL':
-            if (state.matchOver) {
+            if (state.matchOver || state.wickets === WICKET_COUNT) {
                 return state;
             }
             return action.value === 5 ? processWicket(state, action.battingPlayers) : processRun(state, action.value);
