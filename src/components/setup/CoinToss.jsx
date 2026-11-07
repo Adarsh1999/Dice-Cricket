@@ -56,7 +56,7 @@ function CoinToss({ team1Selected, team2Selected, setTeam1Selected, setTeam2Sele
 
             <div className="toss-card__action">
                 <button
-                    aria-label="Flip the coin"
+                    aria-label={isTossed ? `Toss result: ${side === 'heads' ? 'Heads' : 'Tails'}` : 'Flip the coin'}
                     className={`coin ${isFlipping ? 'coin--flipping' : ''} ${side ? `coin--${side}` : ''}`}
                     disabled={isFlipping || isTossed || !team1Selected || !team2Selected}
                     onClick={tossCoin}
@@ -68,7 +68,7 @@ function CoinToss({ team1Selected, team2Selected, setTeam1Selected, setTeam2Sele
                 <span className="toss-card__hint">
                     {isTossed ? (
                         <>
-                            <TeamMark size="tiny" teamId={team1Selected} /> Ready to play
+                            <TeamMark size="tiny" teamId={team1Selected} /> {side === 'heads' ? 'Heads' : 'Tails'} · Toss complete
                         </>
                     ) : (
                         <>

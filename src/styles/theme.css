@@ -852,6 +852,7 @@ summary:focus-visible {
 }
 
 .coin {
+    --coin-flip-end: 1800deg;
     position: relative;
     width: 62px;
     height: 62px;
@@ -890,6 +891,10 @@ summary:focus-visible {
 
 .coin__back {
     transform: rotateY(180deg);
+}
+
+.coin--tails {
+    --coin-flip-end: 1980deg;
 }
 
 .coin--tails:not(.coin--flipping) {
@@ -2164,7 +2169,7 @@ summary:focus-visible {
 @keyframes coinFlip {
     0% { transform: rotateY(0) translateY(0); }
     45% { transform: rotateY(1080deg) translateY(-18px); }
-    100% { transform: rotateY(1980deg) translateY(0); }
+    100% { transform: rotateY(var(--coin-flip-end)) translateY(0); }
 }
 
 @keyframes livePulse {
